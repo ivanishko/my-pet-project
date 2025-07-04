@@ -1,7 +1,9 @@
 <template>
     <div>
         <div v-for="post in posts" :key="post.id" class="mb-6 p-4 border rounded-lg">
-            <h3 class="text-xl font-bold">{{ post.title }}</h3>
+            <Link :href="route('posts.show', post.id)" class="block">
+                <h3 class="text-xl font-bold">{{ post.title }}</h3>
+            </Link>
             <p class="text-gray-600 mb-2">{{ post.content }}</p>
             <p class="text-sm text-gray-500">Автор: {{ post.user.name }}</p>
 
@@ -19,6 +21,8 @@
 </template>
 
 <script setup>
+    import { Link } from '@inertiajs/vue3';
+
     defineProps({
         posts: {
             type: Array,

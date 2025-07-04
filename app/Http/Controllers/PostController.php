@@ -20,7 +20,7 @@ class PostController extends Controller
 
     public function show(Post $post)
     {
-        return Inertia::render('Posts/Show', [
+        return Inertia::render('Posts/Post', [
             'post' => $post->load('user')
         ]);
     }
