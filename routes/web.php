@@ -6,7 +6,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use App\Models\Post;
 use Inertia\Inertia;
-
+use App\Http\Controllers\FederationController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -43,7 +43,31 @@ Route::middleware('auth')->group(function () {
     Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
     Route::put('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+
 });
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Главная страница федераций
+    Route::get('/federations', [FederationController::class, 'index'])
+         ->name('federations.index');
+
+    // Создание федерации
+    Route::post('/federations', [FederationController::class, 'store'])
+         ->name('federations.store');
+
+    // Редактирование федерации
+    Route::get('/federations/{federation}/edit', [FederationController::class, 'edit'])
+         ->name('federations.edit');
+
+    // Обновление федерации
+    Route::put('/federations/{federation}', [FederationController::class, 'update'])
+         ->name('federations.update');
+
+    // Удаление федерации
+    Route::delete('/federations/{federation}', [FederationController::class, 'destroy'])
+         ->name('federations.destroy');
+});
+
 
 // Для Inertia-страниц
 Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
