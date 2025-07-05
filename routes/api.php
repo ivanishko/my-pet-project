@@ -29,4 +29,4 @@ Route::post('/posts', function (Request $request) {
     return Post::create($request->all());
 });
 
-Route::apiResource('federations', FederationController::class)->middleware('auth:sanctum');
+// Route::apiResource('federations', FederationController::class)->middleware('auth:sanctum');
