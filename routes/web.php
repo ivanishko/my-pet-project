@@ -6,7 +6,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use App\Models\Post;
 use Inertia\Inertia;
-
+use App\Http\Controllers\FederationController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -49,4 +49,9 @@ Route::middleware('auth')->group(function () {
 Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
 Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
 
+Route::middleware('auth')->group(function () {
+    Route::get('/federations', function () {
+        return inertia('Federations/Index');
+    })->name('federations.index');
+});
 require __DIR__.'/auth.php';

@@ -3,6 +3,8 @@
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\FederationController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -26,3 +28,5 @@ Route::get('/posts', function () {
 Route::post('/posts', function (Request $request) {
     return Post::create($request->all());
 });
+
+Route::apiResource('federations', FederationController::class)->middleware('auth:sanctum');
