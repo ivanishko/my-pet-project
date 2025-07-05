@@ -1,5 +1,5 @@
 <template>
-    <AuthenticatedLayout>
+    <GuestLayout>
     <div class="relative min-h-screen bg-gray-100">
 
         <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
@@ -56,11 +56,11 @@
             </div>
         </div>
     </div>
-    </AuthenticatedLayout>
+    </GuestLayout>
 </template>
 
 <script setup>
-    import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import GuestLayout from '@/Layouts/GuestLayout.vue';
 
     import { Link } from '@inertiajs/vue3';
     import { Head } from '@inertiajs/vue3';
