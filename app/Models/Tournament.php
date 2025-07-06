@@ -4,23 +4,22 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-
-class Federation extends Model
+class Tournament extends Model
 {
     use HasFactory;
-    use SoftDeletes;
-
 
     protected $fillable = [
+        'federation_id',
         'name',
         'description',
+        'start_date',
+        'end_date',
+        'location'
     ];
-    protected $dates = ['deleted_at'];
 
-    public function tournaments()
+    public function federation()
     {
-        return $this->hasMany(Tournament::class);
+        return $this->belongsTo(Federation::class);
     }
 }

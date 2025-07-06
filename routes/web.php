@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Route;
 use App\Models\Post;
 use Inertia\Inertia;
 use App\Http\Controllers\FederationController;
+use App\Http\Controllers\TournamentController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -54,7 +56,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Создание федерации
     Route::post('/federations', [FederationController::class, 'store'])
          ->name('federations.store');
-
+	Route::get('/federations/{federation}', [FederationController::class, 'show'])
+	     ->name('federations.show');
     // Редактирование федерации
     Route::get('/federations/{federation}/edit', [FederationController::class, 'edit'])
          ->name('federations.edit');
@@ -66,6 +69,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Удаление федерации
     Route::delete('/federations/{federation}', [FederationController::class, 'destroy'])
          ->name('federations.destroy');
+});
+
+Route::prefix('federations/{federation}')->group(function () {
+    Route::resource('tournaments', TournamentController::class)
+        ->names([
+            'index' => 'federations.tournaments.index',
+            'create' => 'federations.tournaments.create',
+            'store' => 'federations.tournaments.store',
+            'edit' => 'federations.tournaments.edit',
+            'update' => 'federations.tournaments.update',
+            'destroy' => 'federations.tournaments.destroy',
+        ]);
 });
 
 

@@ -89,6 +89,7 @@ const confirmDelete = () => {
     <Head title="Федерации" />
 
     <AuthenticatedLayout>
+
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">Управление федерациями</h2>
         </template>
@@ -114,7 +115,14 @@ const confirmDelete = () => {
                             >
                                 <div class="flex justify-between items-start">
                                     <div>
-                                        <h3 class="font-bold text-lg">{{ federation.name }}</h3>
+                                      <h3 class="font-bold text-lg">
+                                        <Link
+                                            :href="route('federations.show', federation.id)"
+                                            class="text-blue-500 hover:text-blue-700"
+                                        >
+                                          {{ federation.name }}
+                                        </Link>
+                                      </h3>
                                         <p class="text-gray-600 mt-1">{{ federation.description }}</p>
                                     </div>
                                     <div class="flex space-x-2">
