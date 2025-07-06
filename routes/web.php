@@ -83,6 +83,18 @@ Route::prefix('federations/{federation}')->group(function () {
         ]);
 });
 
+Route::prefix('tournaments/{tournament}')->group(function () {
+    Route::resource('seasons', TournamentSeasonController::class)
+        ->names([
+            'index' => 'tournaments.seasons.index',
+            'create' => 'tournaments.seasons.create',
+            'store' => 'tournaments.seasons.store',
+            'edit' => 'tournaments.seasons.edit',
+            'update' => 'tournaments.seasons.update',
+            'destroy' => 'tournaments.seasons.destroy',
+        ]);
+});
+
 
 // Для Inertia-страниц
 Route::get('/posts', [PostController::class, 'index'])->name('posts.index');

@@ -3,30 +3,27 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
-  federation: Object,
   tournament: Object,
 });
 
 const form = useForm({
-  name: props.tournament?.name ?? '',
-  description: props.tournament?.description ?? '',
-  location: props.tournament?.location ?? '',
+  start_date: '',
+  end_date: '',
+  is_current: false,
 });
 
 const submit = () => {
-  props.tournament
-      ? form.put(route('federations.tournaments.update', [props.federation.id, props.tournament.id]))
-      : form.post(route('federations.tournaments.store', props.federation.id));
+  form.post(route('tournaments.seasons.store', props.tournament.id));
 };
 </script>
 
 <template>
-  <Head :title="`${tournament ? 'Редактирование' : 'Создание'} турнира`" />
+  <Head title="Добавление сезона" />
 
   <AuthenticatedLayout>
     <template #header>
       <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-        {{ tournament ? 'Редактирование' : 'Создание' }} турнира для "{{ federation.name }}"
+        Добавление сезона для "{{ tournament.name }}"
       </h2>
     </template>
 
@@ -37,46 +34,46 @@ const submit = () => {
             <form @submit.prevent="submit">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label class="block text-gray-700 mb-1">Название *</label>
+                  <label class="block text-gray-700 mb-1">Дата начала *</label>
                   <input
-                      v-model="form.name"
-                      type="text"
+                      v-model="form.start_date"
+                      type="date"
                       class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      :class="{ 'border-red-500': form.errors.name }"
                       required
                   >
-                  <p v-if="form.errors.name" class="text-red-500 text-sm mt-1">
-                    {{ form.errors.name }}
+                  <p v-if="form.errors.start_date" class="text-red-500 text-sm mt-1">
+                    {{ form.errors.start_date }}
                   </p>
                 </div>
 
                 <div>
-                  <label class="block text-gray-700 mb-1">Место проведения *</label>
+                  <label class="block text-gray-700 mb-1">Дата окончания *</label>
                   <input
-                      v-model="form.location"
-                      type="text"
+                      v-model="form.end_date"
+                      type="date"
                       class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      :class="{ 'border-red-500': form.errors.location }"
                       required
                   >
-                  <p v-if="form.errors.location" class="text-red-500 text-sm mt-1">
-                    {{ form.errors.location }}
+                  <p v-if="form.errors.end_date" class="text-red-500 text-sm mt-1">
+                    {{ form.errors.end_date }}
                   </p>
                 </div>
               </div>
 
               <div class="mb-4">
-                <label class="block text-gray-700 mb-1">Описание</label>
-                <textarea
-                    v-model="form.description"
-                    class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows="4"
-                ></textarea>
+                <label class="inline-flex items-center">
+                  <input
+                      v-model="form.is_current"
+                      type="checkbox"
+                      class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  >
+                  <span class="ml-2">Сделать текущим сезоном</span>
+                </label>
               </div>
 
               <div class="flex items-center justify-end space-x-4">
                 <Link
-                    :href="route('federations.tournaments.index', federation.id)"
+                    :href="route('tournaments.seasons.index', tournament.id)"
                     class="px-4 py-2 border rounded hover:bg-gray-100"
                 >
                   Отмена
@@ -86,8 +83,8 @@ const submit = () => {
                     class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                     :disabled="form.processing"
                 >
-                  <span v-if="form.processing">Сохранение...</span>
-                  <span v-else>{{ tournament ? 'Обновить' : 'Создать' }}</span>
+                  <span v-if="form.processing">Создание...</span>
+                  <span v-else>Создать сезон</span>
                 </button>
               </div>
             </form>

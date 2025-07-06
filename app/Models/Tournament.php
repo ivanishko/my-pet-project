@@ -2,24 +2,25 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Tournament extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'federation_id',
         'name',
         'description',
-        'start_date',
-        'end_date',
-        'location'
     ];
 
-    public function federation()
+    public function federation(): BelongsTo
     {
         return $this->belongsTo(Federation::class);
+    }
+
+    public function seasons(): HasMany
+    {
+        return $this->hasMany(TournamentSeason::class);
     }
 }
