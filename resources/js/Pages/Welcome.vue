@@ -61,6 +61,7 @@
 
 <script setup>
 import GuestLayout from '@/Layouts/GuestLayout.vue';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
     import { Link } from '@inertiajs/vue3';
     import { Head } from '@inertiajs/vue3';

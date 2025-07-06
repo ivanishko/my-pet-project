@@ -1,5 +1,5 @@
 <template>
-    <GuestLayout>
+    <AuthenticatedLayout>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Posts
@@ -47,7 +47,7 @@
                 </div>
             </div>
         </div>
-    </GuestLayout>
+    </AuthenticatedLayout>
 </template>
 
 <script setup>
@@ -58,7 +58,7 @@
     import { ref, onMounted } from 'vue';
     import { router } from '@inertiajs/vue3';
     import axios from 'axios';
-import GuestLayout from '@/Layouts/GuestLayout.vue';
+    import GuestLayout from '@/Layouts/GuestLayout.vue';
 
     // Данные постов
     const posts = ref([]);
