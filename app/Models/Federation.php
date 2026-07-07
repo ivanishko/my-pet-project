@@ -18,4 +18,9 @@ class Federation extends Model
         'description',
     ];
     protected $dates = ['deleted_at'];
+
+    public function tournaments()
+    {
+        return $this->hasMany(Tournament::class);
+    }
 }

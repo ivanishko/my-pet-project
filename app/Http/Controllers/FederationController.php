@@ -32,6 +32,14 @@ class FederationController extends Controller
             ->with('status', 'Федерация успешно создана');
     }
 
+    public function show(Federation $federation)
+    {
+        return Inertia::render('Federations/Show', [
+            'federation' => $federation->load('tournaments'),
+            'status' => session('status'),
+        ]);
+    }
+
     // Форма редактирования
     public function edit(Federation $federation)
     {
