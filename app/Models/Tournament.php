@@ -12,6 +12,7 @@ class Tournament extends Model
         'federation_id',
         'name',
         'description',
+        'location',
     ];
 
     public function federation(): BelongsTo
@@ -22,5 +23,14 @@ class Tournament extends Model
     public function seasons(): HasMany
     {
         return $this->hasMany(TournamentSeason::class);
+    }
+    // Добавить валидацию в модель
+    public static function rules($id = null)
+    {
+        return [
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'location' => 'required|string|max:255', // Добавить валидацию
+        ];
     }
 }
