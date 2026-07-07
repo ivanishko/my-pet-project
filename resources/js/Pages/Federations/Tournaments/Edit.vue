@@ -1,19 +1,17 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+    import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+    import { Head, Link, useForm, router } from '@inertiajs/vue3'; // ✅ Добавить router
 
-const props = defineProps({
-  federation: Object,
-  tournament: Object,
-});
+    const props = defineProps({
+        federation: Object,
+        tournament: Object,
+    });
 
-const form = useForm({
-  name: props.tournament?.name ?? '',
-  description: props.tournament?.description ?? '',
-  start_date: props.tournament?.start_date ?? '',
-  end_date: props.tournament?.end_date ?? '',
-  location: props.tournament?.location ?? '',
-});
+    const form = useForm({
+        name: props.tournament?.name ?? '',
+        description: props.tournament?.description ?? '',
+        location: props.tournament?.location ?? '',
+    });
 
 const submit = () => {
   props.tournament
@@ -23,12 +21,12 @@ const submit = () => {
 </script>
 
 <template>
-  <Head :title="`${tournament ? 'Редактирование' : 'Создание'} турнира`" />
+  <Head :title="`Редактирование турнира`" />
 
   <AuthenticatedLayout>
     <template #header>
       <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-        {{ tournament ? 'Редактирование' : 'Создание' }} турнира для "{{ federation.name }}"
+        {{ tournament ? 'Редактирование' : 'Создание?' }} турнира для "{{ federation.name }}"
       </h2>
     </template>
 
@@ -67,36 +65,6 @@ const submit = () => {
                 </div>
               </div>
 
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label class="block text-gray-700 mb-1">Дата начала *</label>
-                  <input
-                      v-model="form.start_date"
-                      type="date"
-                      class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      :class="{ 'border-red-500': form.errors.start_date }"
-                      required
-                  >
-                  <p v-if="form.errors.start_date" class="text-red-500 text-sm mt-1">
-                    {{ form.errors.start_date }}
-                  </p>
-                </div>
-
-                <div>
-                  <label class="block text-gray-700 mb-1">Дата окончания *</label>
-                  <input
-                      v-model="form.end_date"
-                      type="date"
-                      class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      :class="{ 'border-red-500': form.errors.end_date }"
-                      required
-                  >
-                  <p v-if="form.errors.end_date" class="text-red-500 text-sm mt-1">
-                    {{ form.errors.end_date }}
-                  </p>
-                </div>
-              </div>
-
               <div class="mb-4">
                 <label class="block text-gray-700 mb-1">Описание</label>
                 <textarea
@@ -119,7 +87,7 @@ const submit = () => {
                     :disabled="form.processing"
                 >
                   <span v-if="form.processing">Сохранение...</span>
-                  <span v-else>{{ tournament ? 'Обновить' : 'Создать' }}</span>
+                  <span v-else>Обновить</span>
                 </button>
               </div>
             </form>
