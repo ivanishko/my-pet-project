@@ -1,13 +1,13 @@
 <script setup>
-import { ref } from 'vue';
-import ApplicationLogo from '@/Components/ApplicationLogo.vue';
-import Dropdown from '@/Components/Dropdown.vue';
-import DropdownLink from '@/Components/DropdownLink.vue';
-import NavLink from '@/Components/NavLink.vue';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link } from '@inertiajs/vue3';
+    import {ref} from 'vue';
+    import ApplicationLogo from '@/Components/ApplicationLogo.vue';
+    import Dropdown from '@/Components/Dropdown.vue';
+    import DropdownLink from '@/Components/DropdownLink.vue';
+    import NavLink from '@/Components/NavLink.vue';
+    import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
+    import {Link} from '@inertiajs/vue3';
 
-const showingNavigationDropdown = ref(false);
+    const showingNavigationDropdown = ref(false);
 </script>
 
 <template>
@@ -29,15 +29,16 @@ const showingNavigationDropdown = ref(false);
 
                             <!-- Navigation Links -->
                             <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
-                                    Главная
-                                </NavLink>
                                 <NavLink :href="route('posts.index')" :active="route().current('posts.index')">
                                     Записи
                                 </NavLink>
-                              <NavLink :href="route('federations.index')" :active="route().current('federations.index')">
-                                Федерации
-                              </NavLink>
+                                <NavLink :href="route('federations.index')"
+                                         :active="route().current('federations.index')">
+                                    Федерации
+                                </NavLink>
+                                <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
+                                    Дашбоард
+                                </NavLink>
                             </div>
                         </div>
 
@@ -70,7 +71,7 @@ const showingNavigationDropdown = ref(false);
                                     </template>
 
                                     <template #content>
-                                        <DropdownLink :href="route('profile.edit')"> Профиль </DropdownLink>
+                                        <DropdownLink :href="route('profile.edit')"> Профиль</DropdownLink>
                                         <DropdownLink :href="route('logout')" method="post" as="button">
                                             Выйти
                                         </DropdownLink>
@@ -133,7 +134,7 @@ const showingNavigationDropdown = ref(false);
                         </div>
 
                         <div class="mt-3 space-y-1">
-                            <ResponsiveNavLink :href="route('profile.edit')"> Профиль </ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('profile.edit')"> Профиль</ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('logout')" method="post" as="button">
                                 Выйти
                             </ResponsiveNavLink>
@@ -145,13 +146,13 @@ const showingNavigationDropdown = ref(false);
             <!-- Page Heading -->
             <header class="bg-white shadow" v-if="$slots.header">
                 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                    <slot name="header" />
+                    <slot name="header"/>
                 </div>
             </header>
 
             <!-- Page Content -->
             <main>
-                <slot />
+                <slot/>
             </main>
         </div>
     </div>
