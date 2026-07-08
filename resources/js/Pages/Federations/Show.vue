@@ -1,5 +1,5 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import GuestLayout from '@/Layouts/GuestLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
 defineProps({
@@ -11,7 +11,7 @@ defineProps({
 <template>
   <Head :title="federation.name" />
 
-  <AuthenticatedLayout>
+  <GuestLayout>
     <template #header>
       <div class="flex items-center justify-between">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -19,6 +19,7 @@ defineProps({
         </h2>
         <div class="flex space-x-2">
           <Link
+              v-if="$page.props.auth.user"
               :href="route('federations.edit', federation.id)"
               class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
@@ -67,6 +68,7 @@ defineProps({
               <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-bold">Турниры федерации</h3>
                 <Link
+                    v-if="$page.props.auth.user"
                     :href="route('federations.tournaments.create', federation.id)"
                     class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
                 >
@@ -92,18 +94,19 @@ defineProps({
                       </h4>
                       <p class="text-gray-600 mt-1">{{ tournament.description }}</p>
                       <div class="mt-2 text-sm text-gray-500">
-                        <p>Даты: {{ tournament.start_date }} - {{ tournament.end_date }}</p>
                         <p>Место: {{ tournament.location }}</p>
                       </div>
                     </div>
                     <div class="flex space-x-2">
                       <Link
+                          v-if="$page.props.auth.user"
                           :href="route('federations.tournaments.edit', [federation.id, tournament.id])"
                           class="text-blue-500 hover:text-blue-700 px-3 py-1 border border-blue-500 rounded hover:bg-blue-50"
                       >
                         Редактировать
                       </Link>
                       <Link
+                          v-if="$page.props.auth.user"
                           method="delete"
                           :href="route('federations.tournaments.destroy', [federation.id, tournament.id])"
                           as="button"
@@ -124,5 +127,5 @@ defineProps({
         </div>
       </div>
     </div>
-  </AuthenticatedLayout>
+  </GuestLayout>
 </template>
