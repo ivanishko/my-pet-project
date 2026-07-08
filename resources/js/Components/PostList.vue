@@ -10,10 +10,10 @@
             <!-- Кнопки только для авторизованного автора поста -->
             <div v-if="true" class="mt-2">
                 <button @click="$emit('edit', post)" class="mr-2 bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-sm">
-                    Edit
+                    Править
                 </button>
                 <button @click="$emit('delete', post)" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-sm">
-                    Delete
+                    Удалить
                 </button>
             </div>
         </div>
