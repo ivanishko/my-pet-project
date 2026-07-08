@@ -2,29 +2,28 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\FederationController;
+use App\Http\Controllers\TournamentController;
+use App\Http\Controllers\TournamentSeasonController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use App\Models\Post;
 use Inertia\Inertia;
-use App\Http\Controllers\FederationController;
-use App\Http\Controllers\TournamentController;
 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
 */
 
+// ============ ПУБЛИЧНЫЕ МАРШРУТЫ (доступны всем) ============
+
+// Главная страница
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'posts' => Post::with('user')
             ->latest()
-            ->take(10) // Ограничиваем количество постов
+            ->take(10)
             ->get(),
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
@@ -33,71 +32,69 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Просмотр постов (доступно всем)
+Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
+Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
 
-Route::middleware('auth')->group(function () {
+// Просмотр федераций (доступно всем)
+Route::get('/federations', [FederationController::class, 'index'])->name('federations.index');
+Route::get('/federations/{federation}', [FederationController::class, 'show'])->name('federations.show');
+
+// Просмотр турниров (доступно всем)
+Route::get('/federations/{federation}/tournaments', [TournamentController::class, 'index'])
+    ->name('federations.tournaments.index');
+Route::get('/federations/{federation}/tournaments/{tournament}', [TournamentController::class, 'show'])
+    ->name('federations.tournaments.show');
+
+// ============ ЗАЩИЩЕННЫЕ МАРШРУТЫ (только для авторизованных) ============
+
+Route::middleware(['auth'])->group(function () {
+
+    // Профиль пользователя
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // ===== УПРАВЛЕНИЕ ПОСТАМИ =====
     Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
     Route::put('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
 
+    // ===== УПРАВЛЕНИЕ ФЕДЕРАЦИЯМИ =====
+    Route::post('/federations', [FederationController::class, 'store'])->name('federations.store');
+    Route::get('/federations/{federation}/edit', [FederationController::class, 'edit'])->name('federations.edit');
+    Route::put('/federations/{federation}', [FederationController::class, 'update'])->name('federations.update');
+    Route::delete('/federations/{federation}', [FederationController::class, 'destroy'])->name('federations.destroy');
+
+    // ===== УПРАВЛЕНИЕ ТУРНИРАМИ =====
+    Route::post('/federations/{federation}/tournaments', [TournamentController::class, 'store'])
+        ->name('federations.tournaments.store');
+    Route::get('/federations/{federation}/tournaments/create', [TournamentController::class, 'create'])
+        ->name('federations.tournaments.create');
+    Route::get('/federations/{federation}/tournaments/{tournament}/edit', [TournamentController::class, 'edit'])
+        ->name('federations.tournaments.edit');
+    Route::put('/federations/{federation}/tournaments/{tournament}', [TournamentController::class, 'update'])
+        ->name('federations.tournaments.update');
+    Route::delete('/federations/{federation}/tournaments/{tournament}', [TournamentController::class, 'destroy'])
+        ->name('federations.tournaments.destroy');
+
+    // ===== УПРАВЛЕНИЕ СЕЗОНАМИ =====
+    Route::post('/tournaments/{tournament}/seasons', [TournamentSeasonController::class, 'store'])
+        ->name('tournaments.seasons.store');
+    Route::get('/tournaments/{tournament}/seasons/create', [TournamentSeasonController::class, 'create'])
+        ->name('tournaments.seasons.create');
+    Route::get('/tournaments/{tournament}/seasons/{season}/edit', [TournamentSeasonController::class, 'edit'])
+        ->name('tournaments.seasons.edit');
+    Route::put('/tournaments/{tournament}/seasons/{season}', [TournamentSeasonController::class, 'update'])
+        ->name('tournaments.seasons.update');
+    Route::delete('/tournaments/{tournament}/seasons/{season}', [TournamentSeasonController::class, 'destroy'])
+        ->name('tournaments.seasons.destroy');
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    // Главная страница федераций
-    Route::get('/federations', [FederationController::class, 'index'])
-         ->name('federations.index');
+// ============ ДАШБОРД (только для авторизованных и верифицированных) ============
+Route::get('/dashboard', function () {
+    return Inertia::render('Dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
-    // Создание федерации
-    Route::post('/federations', [FederationController::class, 'store'])
-         ->name('federations.store');
-	Route::get('/federations/{federation}', [FederationController::class, 'show'])
-	     ->name('federations.show');
-    // Редактирование федерации
-    Route::get('/federations/{federation}/edit', [FederationController::class, 'edit'])
-         ->name('federations.edit');
-
-    // Обновление федерации
-    Route::put('/federations/{federation}', [FederationController::class, 'update'])
-         ->name('federations.update');
-
-    // Удаление федерации
-    Route::delete('/federations/{federation}', [FederationController::class, 'destroy'])
-         ->name('federations.destroy');
-});
-
-Route::prefix('federations/{federation}')->group(function () {
-    Route::resource('tournaments', TournamentController::class)
-        ->names([
-            'index' => 'federations.tournaments.index',
-            'create' => 'federations.tournaments.create',
-            'store' => 'federations.tournaments.store',
-            'edit' => 'federations.tournaments.edit',
-            'update' => 'federations.tournaments.update',
-            'destroy' => 'federations.tournaments.destroy',
-        ]);
-});
-
-Route::prefix('tournaments/{tournament}')->group(function () {
-    Route::resource('seasons', TournamentSeasonController::class)
-        ->names([
-            'index' => 'tournaments.seasons.index',
-            'create' => 'tournaments.seasons.create',
-            'store' => 'tournaments.seasons.store',
-            'edit' => 'tournaments.seasons.edit',
-            'update' => 'tournaments.seasons.update',
-            'destroy' => 'tournaments.seasons.destroy',
-        ]);
-});
-
-
-// Для Inertia-страниц
-Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
-Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
-
+// ============ АУТЕНТИФИКАЦИЯ ============
 require __DIR__.'/auth.php';

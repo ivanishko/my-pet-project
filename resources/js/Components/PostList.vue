@@ -8,7 +8,7 @@
             <p class="text-sm text-gray-500">Автор: {{ post.user.name }}</p>
 
             <!-- Кнопки только для авторизованного автора поста -->
-            <div v-if="true" class="mt-2">
+            <div v-if="$page.props.auth.user"  class="mt-2">
                 <button @click="$emit('edit', post)" class="mr-2 bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-sm">
                     Править
                 </button>

@@ -1,5 +1,5 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import GuestLayout from '@/Layouts/GuestLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { toast } from 'vue3-toastify';
@@ -88,7 +88,7 @@ const confirmDelete = () => {
 <template>
     <Head title="Федерации" />
 
-    <AuthenticatedLayout>
+    <GuestLayout>
 
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">Управление федерациями</h2>
@@ -100,6 +100,7 @@ const confirmDelete = () => {
                     <div class="p-6 text-gray-900">
                         <!-- Кнопка добавления -->
                         <button
+                            v-if="$page.props.auth.user"
                             @click="openAddModal"
                             class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded mb-6"
                         >
@@ -125,7 +126,9 @@ const confirmDelete = () => {
                                       </h3>
                                         <p class="text-gray-600 mt-1">{{ federation.description }}</p>
                                     </div>
-                                    <div class="flex space-x-2">
+                                    <div
+                                        v-if="$page.props.auth.user"
+                                        class="flex space-x-2">
                                         <button
                                             @click="openEditModal(federation)"
                                             class="text-blue-500 hover:text-blue-700 px-3 py-1 border border-blue-500 rounded hover:bg-blue-50 transition-colors"
@@ -260,5 +263,5 @@ const confirmDelete = () => {
                 </div>
             </div>
         </div>
-    </AuthenticatedLayout>
+    </GuestLayout>
 </template>

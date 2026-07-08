@@ -1,5 +1,5 @@
 <template>
-    <AuthenticatedLayout>
+    <GuestLayout>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Записи
@@ -53,11 +53,10 @@
                 </div>
             </div>
         </div>
-    </AuthenticatedLayout>
+    </GuestLayout>
 </template>
 
 <script setup>
-    import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import PostList from '@/Components/PostList.vue';
     import PostModal from '@/Components/PostModal.vue';
     import ConfirmationModal from '@/Components/ConfirmationModal.vue';
