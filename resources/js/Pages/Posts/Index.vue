@@ -2,7 +2,7 @@
     <AuthenticatedLayout>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Posts
+                Записи
             </h2>
         </template>
 
@@ -16,15 +16,20 @@
                                 @click="openCreateModal"
                                 class="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                         >
-                            Create Post
+                            Создать запись
                         </button>
+                        <div v-if="isLoading">
+                            <p>Загрузка...</p>
+                        </div>
+                        <div v-else>
+                            <div v-if="posts.length > 0">
+                                <PostList :posts="posts" @edit="openEditModal" @delete="openDeleteModal" />
+                            </div>
+                            <div v-else class="p-4 text-gray-500">
+                                Постов нет
+                            </div>
+                        </div>
 
-                        <div v-if="posts.length > 0">
-                            <PostList :posts="posts" @edit="openEditModal" @delete="openDeleteModal" />
-                        </div>
-                        <div v-else class="p-4 text-gray-500">
-                            Постов нет
-                        </div>
 
                         <!-- Модальное окно для создания/редактирования -->
                         <PostModal
@@ -41,7 +46,7 @@
                                 @confirmed="confirmDelete"
                                 @close="closeDeleteConfirmation"
                         >
-                            Are you sure you want to delete this post?
+                            Вы действительно хотите удалить пост?
                         </ConfirmationModal>
                     </div>
                 </div>
@@ -80,13 +85,17 @@
     });
 
     const fetchPosts = () => {
+        isLoading.value = true;
         router.get('/posts', {}, {
             preserveState: true,
             onSuccess: (page) => {
                 posts.value = page.props.posts || [];
+                isLoading.value = false;
             },
             onError: (errors) => {
                 console.error('Ошибка при загрузке постов:', errors);
+                error.value = 'Не удалось загрузить записи';
+                isLoading.value = false;
                 posts.value = [];
             }
         });
