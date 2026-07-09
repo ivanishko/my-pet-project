@@ -12,17 +12,20 @@ class TournamentController extends Controller
     /**
      * Список всех турниров (публичный)
      */
-    public function index()
-    {
-        $tournaments = Tournament::with('federation')
-            ->latest()
-            ->get();
+     public function index()
+        {
+            $tournaments = Tournament::with('federation')
+                ->latest()
+                ->get();
 
-        return Inertia::render('Tournaments/Index', [
-            'tournaments' => $tournaments,
-            'status' => session('status'),
-        ]);
-    }
+            $federations = Federation::orderBy('name')->get();
+
+            return Inertia::render('Tournaments/Index', [
+                'tournaments' => $tournaments,
+                'federations' => $federations, // <-- ДОБАВЬТЕ ЭТУ СТРОКУ
+                'status' => session('status'),
+            ]);
+        }
 
     /**
      * Форма создания турнира
