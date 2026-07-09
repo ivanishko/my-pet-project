@@ -1,6 +1,7 @@
 <script setup>
-    import GuestLayout from '@/Layouts/GuestLayout.vue';
+    import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import { Head, Link, router } from '@inertiajs/vue3';
+    import TournamentModal from '@/Components/TournamentModal.vue';
     import ConfirmationModal from '@/Components/ConfirmationModal.vue';
     import { ref } from 'vue';
 
@@ -15,6 +16,7 @@
         }
     });
 
+    const showModal = ref(false);
     const showDeleteConfirmation = ref(false);
     const tournamentToDelete = ref(null);
 
@@ -36,12 +38,28 @@
         showDeleteConfirmation.value = false;
         tournamentToDelete.value = null;
     };
+
+    const openCreateModal = () => {
+        showModal.value = true;
+    };
+
+    const handleSave = (data) => {
+        router.post(route('tournaments.store'), data, {
+            onSuccess: () => {
+                closeModal();
+            }
+        });
+    };
+
+    const closeModal = () => {
+        showModal.value = false;
+    };
 </script>
 
 <template>
     <Head :title="federation.name" />
 
-    <GuestLayout>
+    <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -117,13 +135,13 @@
                         <div>
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-lg font-bold">Турниры федерации</h3>
-                                <Link
+                                <button
                                     v-if="$page.props.auth.user"
-                                    :href="route('tournaments.create')"
+                                    @click="openCreateModal"
                                     class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
                                 >
                                     Добавить турнир
-                                </Link>
+                                </button>
                             </div>
 
                             <div v-if="federation.tournaments && federation.tournaments.length > 0" class="space-y-4">
@@ -183,6 +201,15 @@
             </div>
         </div>
 
+        <!-- Модальное окно создания турнира -->
+        <TournamentModal
+            :show="showModal"
+            :federations="[federation]"
+            :preselected-federation-id="federation.id"
+            @save="handleSave"
+            @close="closeModal"
+        />
+
         <!-- Модальное окно подтверждения удаления -->
         <ConfirmationModal
             :show="showDeleteConfirmation"
@@ -194,5 +221,5 @@
             </template>
             <p>Вы действительно хотите удалить турнир <strong>"{{ tournamentToDelete?.name }}"</strong>?</p>
         </ConfirmationModal>
-    </GuestLayout>
+    </AuthenticatedLayout>
 </template>

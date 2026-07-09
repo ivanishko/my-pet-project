@@ -1,17 +1,17 @@
 <template>
-    <GuestLayout>
+    <AuthenticatedLayout>
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                     Все турниры
                 </h2>
-                <Link
+                <button
                     v-if="$page.props.auth.user"
-                    :href="route('tournaments.create')"
+                    @click="openCreateModal"
                     class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                 >
                     Создать турнир
-                </Link>
+                </button>
             </div>
         </template>
 
@@ -55,7 +55,7 @@
                                             :href="route('tournaments.edit', tournament.id)"
                                             class="text-blue-500 hover:text-blue-700"
                                         >
-                                            Править
+                                            Редактировать
                                         </Link>
                                         <button
                                             @click="confirmDelete(tournament)"
@@ -70,18 +70,19 @@
 
                         <div v-else class="text-center py-12">
                             <p class="text-gray-500 text-lg">Турниров пока нет</p>
-                            <Link
-                                v-if="$page.props.auth.user"
-                                :href="route('tournaments.create')"
-                                class="mt-4 inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                            >
-                                Создать первый турнир
-                            </Link>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Модальное окно создания турнира -->
+        <TournamentModal
+            :show="showModal"
+            :federations="federations"
+            @save="handleSave"
+            @close="closeModal"
+        />
 
         <!-- Модальное окно подтверждения удаления -->
         <ConfirmationModal
@@ -91,18 +92,22 @@
         >
             Вы действительно хотите удалить турнир "{{ tournamentToDelete?.name }}"?
         </ConfirmationModal>
-    </GuestLayout>
+    </AuthenticatedLayout>
 </template>
 
 <script setup>
-    import GuestLayout from '@/Layouts/GuestLayout.vue';
-    import { Link } from '@inertiajs/vue3';
-    import { router } from '@inertiajs/vue3';
+    import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+    import { Link, router } from '@inertiajs/vue3';
+    import TournamentModal from '@/Components/TournamentModal.vue';
     import ConfirmationModal from '@/Components/ConfirmationModal.vue';
     import { ref } from 'vue';
 
     const props = defineProps({
         tournaments: {
+            type: Array,
+            required: true
+        },
+        federations: {
             type: Array,
             required: true
         },
@@ -112,6 +117,7 @@
         }
     });
 
+    const showModal = ref(false);
     const showDeleteConfirmation = ref(false);
     const tournamentToDelete = ref(null);
 
@@ -130,6 +136,22 @@
     const truncateText = (text, length) => {
         if (!text) return '';
         return text.length > length ? text.substring(0, length) + '...' : text;
+    };
+
+    const openCreateModal = () => {
+        showModal.value = true;
+    };
+
+    const handleSave = (data) => {
+        router.post(route('tournaments.store'), data, {
+            onSuccess: () => {
+                closeModal();
+            }
+        });
+    };
+
+    const closeModal = () => {
+        showModal.value = false;
     };
 
     const confirmDelete = (tournament) => {

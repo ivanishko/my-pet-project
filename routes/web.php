@@ -66,14 +66,14 @@ Route::middleware(['auth'])->group(function () {
 
     // ===== УПРАВЛЕНИЕ ФЕДЕРАЦИЯМИ =====
     // ВАЖНО: create ДОЛЖЕН идти ПЕРВЫМ!
-    Route::get('/federations/create', [FederationController::class, 'create'])->name('federations.create');
+
     Route::post('/federations', [FederationController::class, 'store'])->name('federations.store');
     Route::get('/federations/{federation}/edit', [FederationController::class, 'edit'])->name('federations.edit');
     Route::put('/federations/{federation}', [FederationController::class, 'update'])->name('federations.update');
     Route::delete('/federations/{federation}', [FederationController::class, 'destroy'])->name('federations.destroy');
 
     // ===== УПРАВЛЕНИЕ ТУРНИРАМИ =====
-    Route::get('/tournaments/create', [TournamentController::class, 'create'])->name('tournaments.create');
+
     Route::post('/tournaments', [TournamentController::class, 'store'])->name('tournaments.store');
     Route::get('/tournaments/{tournament}/edit', [TournamentController::class, 'edit'])->name('tournaments.edit');
     Route::put('/tournaments/{tournament}', [TournamentController::class, 'update'])->name('tournaments.update');
