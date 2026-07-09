@@ -2,73 +2,130 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Federation;
 use App\Models\Tournament;
+use App\Models\Federation;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class TournamentController extends Controller
 {
-    public function index(Federation $federation)
+    /**
+     * Список всех турниров (публичный)
+     */
+    public function index()
     {
-        return Inertia::render('Federations/Tournaments/Index', [
-            'federation' => $federation,
-            'tournaments' => $federation->tournaments()->latest()->get(),
+        $tournaments = Tournament::with('federation')
+            ->latest()
+            ->get();
+
+        return Inertia::render('Tournaments/Index', [
+            'tournaments' => $tournaments,
             'status' => session('status'),
         ]);
     }
 
-    public function create(Federation $federation)
+    /**
+     * Форма создания турнира
+     */
+    public function create()
     {
-        return Inertia::render('Federations/Tournaments/Create', [
-            'federation' => $federation,
+        // Получаем все федерации для выпадающего списка
+        $federations = Federation::orderBy('name')->get();
+
+        return Inertia::render('Tournaments/Create', [
+            'federations' => $federations,
+            'status' => session('status'),
         ]);
     }
 
-    public function store(Request $request, Federation $federation)
+    /**
+     * Сохранение нового турнира
+     */
+    public function store(Request $request)
     {
         $validated = $request->validate([
+            'federation_id' => 'required|exists:federations,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'location' => 'required|string|max:255',
+            'type' => 'required|in:individual,team,mixed',
+            'status' => 'required|in:active,inactive,completed',
+            'image' => 'nullable|image|max:2048',
         ]);
 
-        $federation->tournaments()->create($validated);
+        $tournament = Tournament::create($validated);
 
         return redirect()
-            ->route('federations.tournaments.index', $federation->id)
+            ->route('tournaments.index')
             ->with('status', 'Турнир успешно создан');
     }
 
-    public function edit(Federation $federation, Tournament $tournament)
+    /**
+     * Просмотр конкретного турнира
+     */
+    public function show(Tournament $tournament)
     {
-        return Inertia::render('Federations/Tournaments/Edit', [
-            'federation' => $federation,
+        $tournament->load(['federation', 'seasons']);
+
+        return Inertia::render('Tournaments/Show', [
             'tournament' => $tournament,
+            'seasonsCount' => $tournament->seasons()->count(),
+            'status' => session('status'),
         ]);
     }
 
-    public function update(Request $request, Federation $federation, Tournament $tournament)
+    /**
+     * Форма редактирования турнира
+     */
+    public function edit(Tournament $tournament)
+    {
+        $federations = Federation::orderBy('name')->get();
+
+        return Inertia::render('Tournaments/Edit', [
+            'tournament' => $tournament,
+            'federations' => $federations,
+            'status' => session('status'),
+        ]);
+    }
+
+    /**
+     * Обновление турнира
+     */
+    public function update(Request $request, Tournament $tournament)
     {
         $validated = $request->validate([
+            'federation_id' => 'required|exists:federations,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'location' => 'required|string|max:255',
+            'type' => 'required|in:individual,team,mixed',
+            'status' => 'required|in:active,inactive,completed',
+            'image' => 'nullable|image|max:2048',
         ]);
 
         $tournament->update($validated);
 
         return redirect()
-            ->route('federations.tournaments.index', $federation->id)
+            ->route('tournaments.index')
             ->with('status', 'Турнир успешно обновлен');
     }
 
-    public function destroy(Federation $federation, Tournament $tournament)
+    /**
+     * Удаление турнира
+     */
+    public function destroy(Tournament $tournament)
     {
+        // Проверяем, есть ли у турнира сезоны
+        if ($tournament->seasons()->count() > 0) {
+            return redirect()
+                ->back()
+                ->with('error', 'Нельзя удалить турнир, у которого есть сезоны');
+        }
+
         $tournament->delete();
 
         return redirect()
-            ->route('federations.tournaments.index', $federation->id)
+            ->route('tournaments.index')
             ->with('status', 'Турнир успешно удален');
     }
 }

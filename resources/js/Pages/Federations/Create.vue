@@ -2,17 +2,19 @@
     <GuestLayout>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Редактирование федерации: {{ federation.name }}
+                Создание федерации
             </h2>
         </template>
 
         <div class="py-12">
+
             <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 bg-white border-b border-gray-200">
                         <form @submit.prevent="submit" class="space-y-6">
                             <!-- Название -->
                             <div>
+
                                 <label for="name" class="block text-sm font-medium text-gray-700">
                                     Название *
                                 </label>
@@ -46,10 +48,6 @@
                                 <label for="logo" class="block text-sm font-medium text-gray-700">
                                     Логотип
                                 </label>
-                                <div v-if="form.currentLogo" class="mb-2">
-                                    <img :src="`/storage/${form.currentLogo}`" alt="Current logo" class="w-32 h-32 object-cover rounded" />
-                                    <p class="text-sm text-gray-500">Текущий логотип</p>
-                                </div>
                                 <input
                                     id="logo"
                                     type="file"
@@ -59,7 +57,6 @@
                                 />
                                 <div v-if="form.logoPreview" class="mt-2">
                                     <img :src="form.logoPreview" alt="Preview" class="w-32 h-32 object-cover rounded" />
-                                    <p class="text-sm text-gray-500">Новый логотип</p>
                                 </div>
                                 <div v-if="errors.logo" class="text-red-500 text-sm mt-1">
                                     {{ errors.logo }}
@@ -130,7 +127,7 @@
                                     class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                                     :disabled="form.processing"
                                 >
-                                    {{ form.processing ? 'Сохранение...' : 'Обновить' }}
+                                    {{ form.processing ? 'Сохранение...' : 'Создать' }}
                                 </button>
                             </div>
                         </form>
@@ -147,22 +144,14 @@
     import { useForm } from '@inertiajs/vue3';
     import { ref } from 'vue';
 
-    const props = defineProps({
-        federation: {
-            type: Object,
-            required: true
-        }
-    });
-
     const form = useForm({
-        name: props.federation.name,
-        description: props.federation.description || '',
-        currentLogo: props.federation.logo || null,
+        name: '',
+        description: '',
         logo: null,
         logoPreview: null,
-        website: props.federation.website || '',
-        email: props.federation.email || '',
-        phone: props.federation.phone || '',
+        website: '',
+        email: '',
+        phone: '',
     });
 
     const errors = ref({});
@@ -171,6 +160,7 @@
         const file = event.target.files[0];
         if (file) {
             form.logo = file;
+            // Создаем превью
             const reader = new FileReader();
             reader.onload = (e) => {
                 form.logoPreview = e.target.result;
@@ -181,7 +171,7 @@
 
     const submit = () => {
         console.log('form', form);
-        form.put(route('federations.update', props.federation.id), {
+        form.post(route('federations.store'), {
             onError: (error) => {
                 errors.value = error;
             },
