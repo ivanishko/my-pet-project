@@ -42,10 +42,10 @@
                                     Записи
                                 </NavLink>
                                 <NavLink
-                                    :href="route('tournaments.index')"
-                                    :active="route().current('tournaments.index')"
+                                    :href="route('seasons.index')"
+                                    :active="route().current('seasons.index')"
                                 >
-                                    Турниры
+                                    Текущие турниры
                                 </NavLink>
                                 <NavLink
                                     v-if="isAuthenticated"

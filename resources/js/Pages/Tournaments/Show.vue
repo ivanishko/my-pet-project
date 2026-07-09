@@ -97,13 +97,13 @@
                             <h3 class="text-lg font-semibold text-gray-900">
                                 Сезоны ({{ seasonsCount }})
                             </h3>
-                            <Link
+                            <button
                                 v-if="$page.props.auth.user"
-                                :href="route('seasons.create', { tournament_id: tournament.id })"
+                                @click="openCreateSeasonModal"
                                 class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-sm"
                             >
                                 Добавить сезон
-                            </Link>
+                            </button>
                         </div>
 
                         <div v-if="tournament.seasons && tournament.seasons.length > 0" class="space-y-4">
@@ -115,7 +115,12 @@
                                 <div class="flex justify-between items-start">
                                     <div>
                                         <h4 class="font-semibold text-gray-800">
-                                            {{ season.name }}
+                                            <Link
+                                                :href="route('seasons.show', season.id)"
+                                                class="hover:text-blue-600 transition"
+                                            >
+                                                {{ season.name }}
+                                            </Link>
                                         </h4>
                                         <p class="text-sm text-gray-600 mt-1">
                                             {{ season.description }}
@@ -208,6 +213,14 @@
             </template>
             <p>Вы действительно хотите удалить сезон "{{ seasonToDelete?.name }}"?</p>
         </ConfirmationModal>
+
+        <SeasonModal
+            :show="showSeasonModal"
+            :tournament-id="tournament.id"
+            @save="handleSeasonSave"
+            @close="closeSeasonModal"
+        />
+
     </GuestLayout>
 </template>
 
@@ -215,6 +228,7 @@
     import GuestLayout from '@/Layouts/GuestLayout.vue';
     import { Head, Link, router } from '@inertiajs/vue3';
     import ConfirmationModal from '@/Components/ConfirmationModal.vue';
+    import SeasonModal from '@/Components/SeasonModal.vue'; // <-- ДОБАВЬТЕ ЭТУ СТРОКУ
     import { ref } from 'vue';
 
     const props = defineProps({
@@ -320,6 +334,25 @@
     const closeDeleteSeasonConfirmation = () => {
         showDeleteSeasonConfirmation.value = false;
         seasonToDelete.value = null;
+    };
+
+    const showSeasonModal = ref(false);
+
+    const openCreateSeasonModal = () => {
+        showSeasonModal.value = true;
+    };
+
+    const handleSeasonSave = (data) => {
+        router.post(route('seasons.store'), data, {
+            onSuccess: () => {
+                closeSeasonModal();
+                router.reload();
+            }
+        });
+    };
+
+    const closeSeasonModal = () => {
+        showSeasonModal.value = false;
     };
 </script>
 

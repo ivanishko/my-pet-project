@@ -33,6 +33,12 @@
                                     Записи
                                 </NavLink>
                                 <NavLink
+                                    :href="route('seasons.index')"
+                                    :active="route().current('seasons.index')"
+                                >
+                                    Текущие турниры
+                                </NavLink>
+                                <NavLink
                                     :href="route('tournaments.index')"
                                     :active="route().current('tournaments.index')"
                                 >
