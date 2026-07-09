@@ -42,6 +42,13 @@
                                     Записи
                                 </NavLink>
                                 <NavLink
+                                    :href="route('tournaments.index')"
+                                    :active="route().current('tournaments.index')"
+                                >
+                                    Турниры
+                                </NavLink>
+                                <NavLink
+                                    v-if="isAuthenticated"
                                     :href="route('federations.index')"
                                     :active="route().current('federations.index')"
                                 >

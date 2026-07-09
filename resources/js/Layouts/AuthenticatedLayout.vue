@@ -32,6 +32,12 @@
                                 <NavLink :href="route('posts.index')" :active="route().current('posts.index')">
                                     Записи
                                 </NavLink>
+                                <NavLink
+                                    :href="route('tournaments.index')"
+                                    :active="route().current('tournaments.index')"
+                                >
+                                    Турниры
+                                </NavLink>
                                 <NavLink :href="route('federations.index')"
                                          :active="route().current('federations.index')">
                                     Федерации
