@@ -46,7 +46,9 @@ Route::get('/tournaments/{tournament}', [TournamentController::class, 'show'])->
 
 // ===== СЕЗОНЫ (публичный просмотр) =====
 Route::get('/seasons', [TournamentSeasonController::class, 'index'])->name('seasons.index');
+Route::get('/seasons/all', [TournamentSeasonController::class, 'all'])->name('seasons.all'); // Все сезоны
 Route::get('/seasons/{season}', [TournamentSeasonController::class, 'show'])->name('seasons.show');
+
 
 // ============ ЗАЩИЩЕННЫЕ МАРШРУТЫ (только для авторизованных) ============
 
