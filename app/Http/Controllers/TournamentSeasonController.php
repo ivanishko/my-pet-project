@@ -97,10 +97,15 @@ class TournamentSeasonController extends Controller
         public function show(TournamentSeason $season)
         {
             // Загружаем связи с турниром и федерацией
-            $season->load(['tournament.federation']);
+            $season->load([
+            'tournament.federation',
+            'stages',
+            'teams'
+            ]);
 
             return Inertia::render('Seasons/Show', [
                 'season' => $season,
+                'teamsCount' => $season->teams()->count(),
                 'status' => session('status'),
             ]);
         }

@@ -3,10 +3,22 @@
         <Head :title="`${season.tournament.name} ${season.name}`" />
         <template #header>
             <div class="flex justify-between items-center">
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    Сезон: {{ season.name }}
-                </h2>
+                <div>
+                    <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                        Сезон: {{ season.name }}
+                    </h2>
+                    <p class="text-sm text-gray-500">
+                        Команд в сезоне: {{ teamsCount || 0 }}
+                    </p>
+                </div>
                 <div class="flex space-x-2">
+                    <Link
+                        v-if="$page.props.auth.user"
+                        :href="route('seasons.teams.index', season.id)"
+                        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                    >
+                        Управление командами
+                    </Link>
                     <Link
                         v-if="$page.props.auth.user"
                         :href="route('seasons.edit', season.id)"
@@ -18,7 +30,7 @@
                         :href="route('seasons.index')"
                         class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
                     >
-                        Назад к списку
+                        Назад
                     </Link>
                 </div>
             </div>
@@ -26,6 +38,64 @@
 
         <div class="py-12">
             <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+                <!-- Этапы -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
+                    <div class="p-6 bg-white border-b border-gray-200">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">
+                                Этапы сезона ({{ season.stages?.length || 0 }})
+                            </h3>
+                            <button
+                                v-if="$page.props.auth.user"
+                                @click="openCreateStageModal"
+                                class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-sm"
+                            >
+                                Добавить этап
+                            </button>
+                        </div>
+
+                        <div v-if="season.stages && season.stages.length > 0" class="space-y-3">
+                            <div
+                                v-for="stage in season.stages"
+                                :key="stage.id"
+                                class="border rounded-lg p-4 hover:shadow-md transition"
+                            >
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-3 flex-wrap">
+                                            <span class="text-sm text-gray-400">#{{ stage.order + 1 }}</span>
+                                            <h4 class="font-semibold text-gray-800">{{ stage.name }}</h4>
+                                            <span :class="typeClasses[stage.type]" class="px-2 py-0.5 rounded text-xs">
+                                {{ typeLabels[stage.type] }}
+                            </span>
+                                        </div>
+                                        <p v-if="stage.description" class="text-sm text-gray-600 mt-1">
+                                            {{ stage.description }}
+                                        </p>
+                                    </div>
+                                    <div v-if="$page.props.auth.user" class="flex space-x-2 ml-4">
+                                        <button
+                                            @click="openEditStageModal(stage)"
+                                            class="text-blue-500 hover:text-blue-700 text-sm"
+                                        >
+                                            Редактировать
+                                        </button>
+                                        <button
+                                            @click="confirmDeleteStage(stage)"
+                                            class="text-red-500 hover:text-red-700 text-sm"
+                                        >
+                                            Удалить
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-else class="text-center py-6">
+                            <p class="text-gray-500">Этапов пока нет</p>
+                        </div>
+                    </div>
+                </div>
                 <!-- Основная информация -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                     <div class="p-6 bg-white border-b border-gray-200">
@@ -164,7 +234,7 @@
                 </div>
             </div>
         </div>
-
+        <!-- Модальные окна -->
         <!-- Модальное окно подтверждения удаления -->
         <ConfirmationModal
             :show="showDeleteConfirmation"
@@ -176,6 +246,16 @@
             </template>
             <p>Вы действительно хотите удалить сезон <strong>"{{ season.name }}"</strong>?</p>
         </ConfirmationModal>
+
+        <StageModal
+            :show="showStageModal"
+            :season-id="season.id"
+            :stage="editingStage"
+            :is-edit="isEditMode"
+            :existing-stages="season.stages || []"
+            @save="handleStageSave"
+            @close="closeStageModal"
+        />
     </GuestLayout>
 </template>
 
@@ -184,6 +264,8 @@
     import { Head, Link, router } from '@inertiajs/vue3';
     import ConfirmationModal from '@/Components/ConfirmationModal.vue';
     import { ref, computed } from 'vue';
+    import StageModal from '@/Components/StageModal.vue';
+
 
     const props = defineProps({
         season: {
@@ -193,10 +275,17 @@
         status: {
             type: String,
             default: null
-        }
+        },
+        teamsCount: {
+            type: Number,
+            default: 0  // <-- ДОБАВЬТЕ
+        },
     });
 
     const showDeleteConfirmation = ref(false);
+    const showStageModal = ref(false);
+    const editingStage = ref(null);
+    const isEditMode = ref(false);
 
     // Статусы сезонов
     const statusLabels = {
@@ -274,6 +363,57 @@
 
     const closeDeleteConfirmation = () => {
         showDeleteConfirmation.value = false;
+    };
+    const typeLabels = {
+        championship: 'Чемпионат',
+        group: 'Групповой этап',
+        playoff: 'Плей-офф'
+    };
+
+    const typeClasses = {
+        championship: 'bg-blue-100 text-blue-800',
+        group: 'bg-green-100 text-green-800',
+        playoff: 'bg-purple-100 text-purple-800'
+    };
+
+    const openCreateStageModal = () => {
+        editingStage.value = null;
+        isEditMode.value = false;
+        showStageModal.value = true;
+    };
+
+    const openEditStageModal = (stage) => {
+        editingStage.value = stage;
+        isEditMode.value = true;
+        showStageModal.value = true;
+    };
+    const handleStageSave = (data) => {
+        const url = isEditMode.value
+            ? route('stages.update', editingStage.value.id)
+            : route('stages.store');
+
+        const method = isEditMode.value ? 'put' : 'post';
+
+        router[method](url, data, {
+            onSuccess: () => {
+                showStageModal.value = false;
+                router.reload();
+            }
+        });
+    };
+
+    const closeStageModal = () => {
+        showStageModal.value = false;
+        editingStage.value = null;
+        isEditMode.value = false;
+    };
+
+    const confirmDeleteStage = (stage) => {
+        if (confirm(`Удалить этап "${stage.name}"?`)) {
+            router.delete(route('stages.destroy', stage.id), {
+                onSuccess: () => router.reload()
+            });
+        }
     };
 </script>
 

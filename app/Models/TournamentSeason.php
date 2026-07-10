@@ -111,4 +111,20 @@ class TournamentSeason extends Model
         $now = Carbon::now();
         return $now->between($this->start_date, $this->end_date);
     }
+    public function stages()
+    {
+        return $this->hasMany(Stage::class, 'season_id')->orderBy('order');
+    }
+
+    public function teams()
+    {
+        return $this->belongsToMany(Team::class, 'season_teams', 'season_id', 'team_id')
+            ->withTimestamps()
+            ->orderBy('teams.name');
+    }
+
+    public function getTeamsCountAttribute()
+    {
+        return $this->teams()->count();
+    }
 }

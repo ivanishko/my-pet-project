@@ -48,4 +48,9 @@ class Federation extends Model
     {
         return $this->logo ? Storage::url($this->logo) : null;
     }
+
+    public function teams()
+    {
+        return $this->hasMany(Team::class);
+    }
 }
