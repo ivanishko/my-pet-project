@@ -57,9 +57,10 @@
 </script>
 
 <template>
-    <Head :title="federation.name" />
 
     <AuthenticatedLayout>
+        <Head :title="federation.name" />
+
         <template #header>
             <div class="flex items-center justify-between">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">

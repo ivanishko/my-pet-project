@@ -1,5 +1,7 @@
 <template>
     <GuestLayout>
+        <Head :title="'Записи'" />
+
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Записи
@@ -61,7 +63,7 @@
     import PostModal from '@/Components/PostModal.vue';
     import ConfirmationModal from '@/Components/ConfirmationModal.vue';
     import { ref, onMounted } from 'vue';
-    import { router } from '@inertiajs/vue3';
+    import { Head, router } from '@inertiajs/vue3';
     import axios from 'axios';
     import GuestLayout from '@/Layouts/GuestLayout.vue';
 

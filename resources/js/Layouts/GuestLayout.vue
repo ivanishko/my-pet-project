@@ -6,16 +6,24 @@
     import NavLink from '@/Components/NavLink.vue';
     import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
     import { Link, usePage } from '@inertiajs/vue3';
-
+    import { Head } from '@inertiajs/vue3';
     const showingNavigationDropdown = ref(false);
     const page = usePage();
 
     // Computed свойства для удобства
     const user = computed(() => page.props.auth.user);
     const isAuthenticated = computed(() => !!user.value);
+
+    defineProps({
+        title: {
+            type: String,
+            default: 'Главная'
+        }
+    });
 </script>
 
 <template>
+    <Head :title="title" />
     <div>
         <div class="min-h-screen bg-gray-100">
             <nav class="bg-white border-b border-gray-100">

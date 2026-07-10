@@ -1,5 +1,6 @@
 <template>
     <GuestLayout>
+        <Head :title="post.title" />
         <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                 <!-- Заголовок как ссылка -->
@@ -21,10 +22,10 @@
 </template>
 
 <script setup>
-    import { Link } from '@inertiajs/vue3';
+    import { Head, Link } from '@inertiajs/vue3';
 
     import { computed } from 'vue';
-import GuestLayout from '@/Layouts/GuestLayout.vue';
+    import GuestLayout from '@/Layouts/GuestLayout.vue';
 
     const props = defineProps({
         post: {
