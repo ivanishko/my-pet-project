@@ -1,5 +1,7 @@
 <template>
     <GuestLayout>
+        <Head :title="'Турниры'" />
+
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -97,7 +99,7 @@
 
 <script setup>
     import GuestLayout from '@/Layouts/GuestLayout.vue';
-    import { Link, router } from '@inertiajs/vue3';
+    import { Head, Link, router } from '@inertiajs/vue3';
     import TournamentModal from '@/Components/TournamentModal.vue';
     import ConfirmationModal from '@/Components/ConfirmationModal.vue';
     import { ref } from 'vue';

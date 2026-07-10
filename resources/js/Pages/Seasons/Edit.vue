@@ -1,5 +1,7 @@
 <template>
-    <AuthenticatedLayout>
+    <GuestLayout>
+        <Head :title="`Редактирование сезона ${ season.name }`" />
+
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Редактирование сезона: {{ season.name }}
@@ -139,11 +141,11 @@
                 </div>
             </div>
         </div>
-    </AuthenticatedLayout>
+    </GuestLayout>
 </template>
 
 <script setup>
-    import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+    import GuestLayout from '@/Layouts/GuestLayout.vue';
     import { Head, Link, useForm } from '@inertiajs/vue3';
     import { ref, computed, watch, onMounted } from 'vue';
 

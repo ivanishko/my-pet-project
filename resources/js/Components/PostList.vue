@@ -1,27 +1,26 @@
 <template>
-    <div>
-        <div v-for="post in posts" :key="post.id" class="mb-6 p-4 border rounded-lg">
-            <Link :href="route('posts.show', post.id)" class="block">
-                <h3 class="text-xl font-bold">{{ post.title }}</h3>
-            </Link>
-            <p class="text-gray-600 mb-2">{{ post.content }}</p>
-            <p class="text-sm text-gray-500">Автор: {{ post.user.name }}</p>
+    <Head :title="'Все записи'" />
+    <div v-for="post in posts" :key="post.id" class="mb-6 p-4 border rounded-lg">
+        <Link :href="route('posts.show', post.id)" class="block">
+            <h3 class="text-xl font-bold">{{ post.title }}</h3>
+        </Link>
+        <p class="text-gray-600 mb-2">{{ post.content }}</p>
+        <p class="text-sm text-gray-500">Автор: {{ post.user.name }}</p>
 
-            <!-- Кнопки только для авторизованного автора поста -->
-            <div v-if="$page.props.auth.user"  class="mt-2">
-                <button @click="$emit('edit', post)" class="mr-2 bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-sm">
-                    Править
-                </button>
-                <button @click="$emit('delete', post)" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-sm">
-                    Удалить
-                </button>
-            </div>
+        <!-- Кнопки только для авторизованного автора поста -->
+        <div v-if="$page.props.auth.user"  class="mt-2">
+            <button @click="$emit('edit', post)" class="mr-2 bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-sm">
+                Править
+            </button>
+            <button @click="$emit('delete', post)" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-sm">
+                Удалить
+            </button>
         </div>
     </div>
 </template>
 
 <script setup>
-    import { Link } from '@inertiajs/vue3';
+    import { Head, Link } from '@inertiajs/vue3';
 
     defineProps({
         posts: {

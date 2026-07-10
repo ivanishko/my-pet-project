@@ -5,6 +5,7 @@ import { Head } from '@inertiajs/vue3';
 
 <template>
     <GuestLayout>
+        <Head :title="'Дашборд'" />
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">Дашбоард</h2>
         </template>

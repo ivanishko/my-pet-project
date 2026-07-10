@@ -1,5 +1,6 @@
 <template>
     <GuestLayout>
+        <Head :title="`${season.tournament.name} ${season.name}`" />
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -31,7 +32,7 @@
                         <div class="flex items-start justify-between">
                             <div class="flex-1">
                                 <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                                    {{ season.name }}
+                                    {{ season.tournament.name }} {{ season.name }}
                                 </h1>
 
                                 <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500 mb-4">
