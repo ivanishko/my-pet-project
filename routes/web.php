@@ -8,6 +8,9 @@ use App\Http\Controllers\TournamentSeasonController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\StageController;
 use App\Http\Controllers\SeasonTeamController;
+use App\Http\Controllers\RoundController;
+use App\Http\Controllers\GameController;
+use App\Http\Controllers\ScheduleController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use App\Models\Post;
@@ -115,6 +118,22 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/seasons/teams', [SeasonTeamController::class, 'store'])->name('seasons.teams.store');
     Route::delete('/seasons/{season}/teams/{team}', [SeasonTeamController::class, 'destroy'])->name('seasons.teams.destroy');
     Route::post('/seasons/teams/multiple', [SeasonTeamController::class, 'storeMultiple'])->name('seasons.teams.store.multiple');
+
+    Route::get('/stages/{stage}', [StageController::class, 'show'])->name('stages.show');
+
+    // ===== УПРАВЛЕНИЕ ТУРАМИ =====
+    Route::get('/stages/{stage}/rounds', [RoundController::class, 'index'])->name('stages.rounds.index');
+    Route::post('/rounds', [RoundController::class, 'store'])->name('rounds.store');
+    Route::post('/rounds/{round}/games', [RoundController::class, 'addGame'])->name('rounds.games.store');
+    Route::put('/rounds/{round}', [RoundController::class, 'update'])->name('rounds.update');
+    Route::delete('/rounds/{round}', [RoundController::class, 'destroy'])->name('rounds.destroy');
+
+    // ===== УПРАВЛЕНИЕ ИГРАМИ =====
+    Route::put('/games/{game}', [GameController::class, 'update'])->name('games.update');
+    Route::put('/rounds/{round}/games', [GameController::class, 'updateMultiple'])->name('rounds.games.update');
+
+
+    Route::post('/seasons/schedule', [ScheduleController::class, 'store'])->name('seasons.schedule.store');
 });
 
 // ============ ДАШБОРД (только для авторизованных и верифицированных) ============

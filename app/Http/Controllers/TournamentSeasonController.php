@@ -94,21 +94,53 @@ class TournamentSeasonController extends Controller
     /**
      * Просмотр сезона
      */
-        public function show(TournamentSeason $season)
-        {
-            // Загружаем связи с турниром и федерацией
-            $season->load([
-            'tournament.federation',
-            'stages',
-            'teams'
-            ]);
+public function show(TournamentSeason $season)
+{
+    $season->load([
+        'tournament.federation',
+        'teams',
+        'stages.rounds.games.homeTeam',
+        'stages.rounds.games.awayTeam',
+    ]);
 
-            return Inertia::render('Seasons/Show', [
-                'season' => $season,
-                'teamsCount' => $season->teams()->count(),
-                'status' => session('status'),
-            ]);
-        }
+    // Получаем этап "Чемпионат" и его туры с играми
+    $championshipStage = $season->stages()->where('type', 'championship')->first();
+
+    $existingRounds = [];
+    if ($championshipStage) {
+        $existingRounds = $championshipStage->rounds()
+            ->with(['games.homeTeam', 'games.awayTeam'])
+            ->orderBy('order')
+            ->get()
+            ->map(function($round) {
+                return [
+                    'id' => $round->id,
+                    'name' => $round->name,
+                    'games' => $round->games->map(function($game) {
+                        return [
+                            'id' => $game->id,
+                            'home_team_id' => $game->home_team_id,
+                            'away_team_id' => $game->away_team_id,
+                            'home_team' => $game->homeTeam ? ['name' => $game->homeTeam->name] : null,
+                            'away_team' => $game->awayTeam ? ['name' => $game->awayTeam->name] : null,
+                            'start_time' => $game->start_time,
+                            'venue' => $game->venue,
+                            'home_score' => $game->home_score,
+                            'away_score' => $game->away_score,
+                            'status' => $game->status,
+                        ];
+                    })
+                ];
+            });
+    }
+
+    return Inertia::render('Seasons/Show', [
+        'season' => $season,
+        'teamsCount' => $season->teams()->count(),
+        'existingRounds' => $existingRounds,
+        'status' => session('status'),
+    ]);
+}
 
     /**
      * Редактирование сезона

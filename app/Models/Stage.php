@@ -51,4 +51,13 @@ class Stage extends Model
         $types = self::getTypes();
         return $types[$type] ?? $type;
     }
+    public function rounds()
+    {
+        return $this->hasMany(Round::class)->orderBy('order');
+    }
+
+    public function getRoundsCountAttribute()
+    {
+        return $this->rounds()->count();
+    }
 }

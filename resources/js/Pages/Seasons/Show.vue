@@ -1,6 +1,5 @@
 <template>
-    <GuestLayout>
-        <Head :title="`${season.tournament.name} ${season.name}`" />
+    <AuthenticatedLayout>
         <template #header>
             <div class="flex justify-between items-center">
                 <div>
@@ -8,27 +7,33 @@
                         Сезон: {{ season.name }}
                     </h2>
                     <p class="text-sm text-gray-500">
-                        Команд в сезоне: {{ teamsCount || 0 }}
+                        Турнир: {{ season.tournament?.name || 'Не указан' }}
+                        <span v-if="teamsCount !== undefined" class="ml-4">
+                            Команд в сезоне: {{ teamsCount }}
+                        </span>
+                        <span v-if="existingRounds.length > 0" class="ml-4">
+                            Туров: {{ existingRounds.length }}
+                        </span>
                     </p>
                 </div>
                 <div class="flex space-x-2">
                     <Link
                         v-if="$page.props.auth.user"
                         :href="route('seasons.teams.index', season.id)"
-                        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-sm"
                     >
                         Управление командами
                     </Link>
                     <Link
                         v-if="$page.props.auth.user"
                         :href="route('seasons.edit', season.id)"
-                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm"
                     >
                         Редактировать
                     </Link>
                     <Link
                         :href="route('seasons.index')"
-                        class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                        class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-sm"
                     >
                         Назад
                     </Link>
@@ -37,298 +42,394 @@
         </template>
 
         <div class="py-12">
-            <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-                <!-- Этапы -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                    <div class="p-6 bg-white border-b border-gray-200">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">
-                                Этапы сезона ({{ season.stages?.length || 0 }})
-                            </h3>
-                            <button
-                                v-if="$page.props.auth.user"
-                                @click="openCreateStageModal"
-                                class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-sm"
-                            >
-                                Добавить этап
-                            </button>
-                        </div>
-
-                        <div v-if="season.stages && season.stages.length > 0" class="space-y-3">
-                            <div
-                                v-for="stage in season.stages"
-                                :key="stage.id"
-                                class="border rounded-lg p-4 hover:shadow-md transition"
-                            >
-                                <div class="flex justify-between items-start">
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-3 flex-wrap">
-                                            <span class="text-sm text-gray-400">#{{ stage.order + 1 }}</span>
-                                            <h4 class="font-semibold text-gray-800">{{ stage.name }}</h4>
-                                            <span :class="typeClasses[stage.type]" class="px-2 py-0.5 rounded text-xs">
-                                {{ typeLabels[stage.type] }}
-                            </span>
-                                        </div>
-                                        <p v-if="stage.description" class="text-sm text-gray-600 mt-1">
-                                            {{ stage.description }}
-                                        </p>
-                                    </div>
-                                    <div v-if="$page.props.auth.user" class="flex space-x-2 ml-4">
-                                        <button
-                                            @click="openEditStageModal(stage)"
-                                            class="text-blue-500 hover:text-blue-700 text-sm"
-                                        >
-                                            Редактировать
-                                        </button>
-                                        <button
-                                            @click="confirmDeleteStage(stage)"
-                                            class="text-red-500 hover:text-red-700 text-sm"
-                                        >
-                                            Удалить
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div v-else class="text-center py-6">
-                            <p class="text-gray-500">Этапов пока нет</p>
-                        </div>
-                    </div>
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <!-- Сообщения -->
+                <div v-if="status" class="mb-4 p-4 bg-green-100 text-green-700 rounded">
+                    {{ status }}
                 </div>
+                <div v-if="$page.props.flash?.error" class="mb-4 p-4 bg-red-100 text-red-700 rounded">
+                    {{ $page.props.flash.error }}
+                </div>
+
                 <!-- Основная информация -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                     <div class="p-6 bg-white border-b border-gray-200">
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                                    {{ season.tournament.name }} {{ season.name }}
-                                </h1>
-
-                                <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500 mb-4">
-                                    <span v-if="season.tournament">
-                                        Турнир:
-                                        <Link
-                                            :href="route('tournaments.show', season.tournament.id)"
-                                            class="text-blue-600 hover:underline"
-                                        >
-                                            {{ season.tournament.name }}
-                                        </Link>
-                                    </span>
-                                    <span v-if="season.tournament?.federation">
-                                        Федерация:
-                                        <Link
-                                            :href="route('federations.show', season.tournament.federation.id)"
-                                            class="text-blue-600 hover:underline"
-                                        >
-                                            {{ season.tournament.federation.name }}
-                                        </Link>
-                                    </span>
-                                </div>
-
-                                <div class="flex flex-wrap gap-x-4 gap-y-2 text-sm text-gray-500">
-                                    <span>
-                                        <span class="font-medium">Начало:</span> {{ formatDate(season.start_date) }}
-                                    </span>
-                                    <span>
-                                        <span class="font-medium">Окончание:</span> {{ formatDate(season.end_date) }}
-                                    </span>
-                                    <span>
-                                        <span :class="statusClasses[season.status]" class="px-2 py-1 rounded text-xs">
-                                            {{ statusLabels[season.status] }}
-                                        </span>
-                                    </span>
-                                    <span>
-                                        <span class="font-medium">Длительность:</span> {{ durationDays }} дней
-                                    </span>
-                                </div>
-
-                                <div class="mt-4 text-sm text-gray-500">
-                                    <span class="font-medium">Создан:</span> {{ formatDateTime(season.created_at) }}
-                                    <span v-if="season.updated_at !== season.created_at" class="ml-4">
-                                        <span class="font-medium">Обновлен:</span> {{ formatDateTime(season.updated_at) }}
-                                    </span>
-                                </div>
-                            </div>
-                            <div v-if="season.is_current" class="ml-6 flex-shrink-0">
-                                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                                    Текущий сезон
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-500">Статус</p>
+                                <span :class="seasonStatusClasses[season.status]" class="px-2 py-1 rounded text-xs">
+                                    {{ seasonStatusLabels[season.status] }}
                                 </span>
                             </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Начало</p>
+                                <p class="font-medium">{{ formatDate(season.start_date) }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Окончание</p>
+                                <p class="font-medium">{{ formatDate(season.end_date) }}</p>
+                            </div>
+                        </div>
+                        <div v-if="season.description" class="mt-4 pt-4 border-t">
+                            <p class="text-sm text-gray-500">Описание</p>
+                            <p class="text-gray-700">{{ season.description }}</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Описание -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
+                <!-- Расписание -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 bg-white border-b border-gray-200">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Описание</h3>
-                        <div class="prose max-w-none">
-                            <p v-if="season.description" class="text-gray-700 whitespace-pre-line">
-                                {{ season.description }}
-                            </p>
-                            <p v-else class="text-gray-400 italic">
-                                Описание отсутствует
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Информация о турнире -->
-                <div v-if="season.tournament" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 bg-white border-b border-gray-200">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">
-                            Информация о турнире
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <p class="text-sm text-gray-500">Название турнира</p>
-                                <Link
-                                    :href="route('tournaments.show', season.tournament.id)"
-                                    class="font-medium text-blue-600 hover:underline"
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">
+                                Расписание
+                            </h3>
+                            <div v-if="$page.props.auth.user && teamsCount >= 2" class="flex space-x-2">
+                                <button
+                                    v-if="!isEditing"
+                                    @click="startEditing"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm"
                                 >
-                                    {{ season.tournament.name }}
-                                </Link>
-                            </div>
-                            <div v-if="season.tournament.federation">
-                                <p class="text-sm text-gray-500">Федерация</p>
-                                <Link
-                                    :href="route('federations.show', season.tournament.federation.id)"
-                                    class="font-medium text-blue-600 hover:underline"
-                                >
-                                    {{ season.tournament.federation.name }}
-                                </Link>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-500">Местоположение</p>
-                                <p class="font-medium">{{ season.tournament.location || 'Не указано' }}</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-500">Тип турнира</p>
-                                <p class="font-medium">{{ tournamentTypeLabels[season.tournament.type] || 'Не указан' }}</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-500">Статус турнира</p>
-                                <span :class="tournamentStatusClasses[season.tournament.status]" class="px-2 py-1 rounded text-xs">
-                                    {{ tournamentStatusLabels[season.tournament.status] || 'Не указан' }}
-                                </span>
+                                    Редактировать расписание
+                                </button>
+                                <template v-else>
+                                    <button
+                                        @click="addNewRound"
+                                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm"
+                                    >
+                                        {{ createRoundButtonText }}
+                                    </button>
+                                    <button
+                                        v-if="rounds.length > 0"
+                                        @click="saveSchedule"
+                                        class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-sm"
+                                    >
+                                        Сохранить расписание
+                                    </button>
+                                    <button
+                                        @click="cancelEditing"
+                                        class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded text-sm"
+                                    >
+                                        Отмена
+                                    </button>
+                                </template>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Кнопки управления -->
-                <div v-if="$page.props.auth.user" class="mt-6 flex justify-end space-x-3">
-                    <Link
-                        :href="route('seasons.edit', season.id)"
-                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                    >
-                        Редактировать сезон
-                    </Link>
-                    <button
-                        @click="confirmDelete"
-                        class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                    >
-                        Удалить сезон
-                    </button>
+                        <!-- Информация о командах -->
+                        <div v-if="teamsCount < 2" class="bg-yellow-50 p-4 rounded-lg mb-4">
+                            <p class="text-yellow-800">
+                                Для создания расписания необходимо минимум 2 команды в сезоне.
+                            </p>
+                            <Link
+                                :href="route('seasons.teams.index', season.id)"
+                                class="text-blue-600 hover:text-blue-800 text-sm"
+                            >
+                                Управление командами →
+                            </Link>
+                        </div>
+
+                        <!-- Существующее расписание (только просмотр) -->
+                        <div v-if="!isEditing && existingRounds.length > 0" class="space-y-4">
+                            <div
+                                v-for="round in existingRounds"
+                                :key="round.id"
+                                class="border rounded-lg p-4"
+                            >
+                                <h4 class="font-semibold text-gray-800 mb-3">
+                                    {{ round.name }}
+                                </h4>
+                                <div v-if="round.games && round.games.length > 0" class="space-y-2">
+                                    <div
+                                        v-for="game in round.games"
+                                        :key="game.id"
+                                        class="bg-gray-50 p-3 rounded flex justify-between items-center"
+                                    >
+                                        <div class="flex items-center space-x-4">
+                                            <div class="flex items-center space-x-2">
+                                                <span class="font-medium">{{ game.home_team?.name || 'Неизвестно' }}</span>
+                                                <span class="text-gray-500 text-sm">vs</span>
+                                                <span class="font-medium">{{ game.away_team?.name || 'Неизвестно' }}</span>
+                                            </div>
+                                            <span v-if="game.venue" class="text-sm text-gray-400">
+                                                {{ game.venue }}
+                                            </span>
+                                            <span v-if="game.start_time" class="text-sm text-gray-400">
+                                                {{ formatDateTime(game.start_time) }}
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center space-x-4">
+                                            <div v-if="game.home_score !== null && game.away_score !== null" class="font-bold text-lg">
+                                                {{ game.home_score }} - {{ game.away_score }}
+                                            </div>
+                                            <div v-else class="text-gray-400 text-sm">
+                                                - : -
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-else class="text-sm text-gray-400">
+                                    Матчей нет
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Редактирование расписания -->
+                        <div v-else-if="isEditing">
+                            <div v-if="rounds.length === 0" class="text-center py-8">
+                                <p class="text-gray-500">Расписание еще не создано</p>
+                                <p class="text-sm text-gray-400 mt-1">
+                                    Нажмите кнопку "{{ createRoundButtonText }}" чтобы начать
+                                </p>
+                            </div>
+
+                            <div v-else class="space-y-6">
+                                <div
+                                    v-for="(round, index) in rounds"
+                                    :key="index"
+                                    class="border rounded-lg p-4"
+                                >
+                                    <h4 class="font-semibold text-gray-800 mb-3">
+                                        {{ round.name }}
+                                    </h4>
+
+                                    <!-- Форма добавления матча для последнего тура -->
+                                    <div v-if="index === rounds.length - 1" class="bg-gray-50 p-4 rounded-lg">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                    Дата и время
+                                                </label>
+                                                <input
+                                                    v-model="newGame.start_time"
+                                                    type="datetime-local"
+                                                    class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                    Место проведения
+                                                </label>
+                                                <input
+                                                    v-model="newGame.venue"
+                                                    type="text"
+                                                    placeholder="Стадион"
+                                                    class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                    Команда хозяев
+                                                </label>
+                                                <select
+                                                    v-model="newGame.home_team_id"
+                                                    class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                >
+                                                    <option value="">Выберите команду</option>
+                                                    <option
+                                                        v-for="team in season.teams"
+                                                        :key="team.id"
+                                                        :value="team.id"
+                                                        :disabled="team.id === newGame.away_team_id"
+                                                    >
+                                                        {{ team.name }}
+                                                    </option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                    Команда гостей
+                                                </label>
+                                                <select
+                                                    v-model="newGame.away_team_id"
+                                                    class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                >
+                                                    <option value="">Выберите команду</option>
+                                                    <option
+                                                        v-for="team in season.teams"
+                                                        :key="team.id"
+                                                        :value="team.id"
+                                                        :disabled="team.id === newGame.home_team_id"
+                                                    >
+                                                        {{ team.name }}
+                                                    </option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                    Голы хозяев
+                                                </label>
+                                                <input
+                                                    v-model.number="newGame.home_score"
+                                                    type="number"
+                                                    min="0"
+                                                    class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                    Голы гостей
+                                                </label>
+                                                <input
+                                                    v-model.number="newGame.away_score"
+                                                    type="number"
+                                                    min="0"
+                                                    class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-3 flex justify-end">
+                                            <button
+                                                @click="addGameToRound"
+                                                class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-sm"
+                                                :disabled="!newGame.home_team_id || !newGame.away_team_id"
+                                            >
+                                                Добавить матч
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Список матчей в туре -->
+                                    <div v-if="round.games && round.games.length > 0" class="mt-3 space-y-2">
+                                        <div
+                                            v-for="(game, gameIndex) in round.games"
+                                            :key="gameIndex"
+                                            class="bg-gray-50 p-3 rounded flex justify-between items-center"
+                                        >
+                                            <div class="flex items-center space-x-4">
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="font-medium">{{ getTeamName(game.home_team_id) }}</span>
+                                                    <span class="text-gray-500 text-sm">vs</span>
+                                                    <span class="font-medium">{{ getTeamName(game.away_team_id) }}</span>
+                                                </div>
+                                                <span v-if="game.venue" class="text-sm text-gray-400">
+                                                    {{ game.venue }}
+                                                </span>
+                                                <span v-if="game.start_time" class="text-sm text-gray-400">
+                                                    {{ formatDateTime(game.start_time) }}
+                                                </span>
+                                            </div>
+                                            <div class="flex items-center space-x-4">
+                                                <div v-if="game.home_score !== null && game.away_score !== null" class="font-bold text-lg">
+                                                    {{ game.home_score }} - {{ game.away_score }}
+                                                </div>
+                                                <div v-else class="text-gray-400 text-sm">
+                                                    Не сыграна
+                                                </div>
+                                                <button
+                                                    @click="removeGameFromRound(index, gameIndex)"
+                                                    class="text-red-500 hover:text-red-700 text-sm"
+                                                >
+                                                    Удалить
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div v-else class="text-sm text-gray-400 mt-2">
+                                        Матчей пока нет
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Если расписания нет -->
+                        <div v-else-if="!isEditing && existingRounds.length === 0" class="text-center py-8">
+                            <p class="text-gray-500">Расписание еще не создано</p>
+                            <button
+                                v-if="$page.props.auth.user && teamsCount >= 2"
+                                @click="startEditing"
+                                class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                            >
+                                Создать расписание
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <!-- Модальные окна -->
-        <!-- Модальное окно подтверждения удаления -->
-        <ConfirmationModal
-            :show="showDeleteConfirmation"
-            @confirmed="deleteSeason"
-            @close="closeDeleteConfirmation"
-        >
-            <template #title>
-                Удаление сезона
-            </template>
-            <p>Вы действительно хотите удалить сезон <strong>"{{ season.name }}"</strong>?</p>
-        </ConfirmationModal>
-
-        <StageModal
-            :show="showStageModal"
-            :season-id="season.id"
-            :stage="editingStage"
-            :is-edit="isEditMode"
-            :existing-stages="season.stages || []"
-            @save="handleStageSave"
-            @close="closeStageModal"
-        />
-    </GuestLayout>
+    </AuthenticatedLayout>
 </template>
 
 <script setup>
-    import GuestLayout from '@/Layouts/GuestLayout.vue';
+    import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
     import { Head, Link, router } from '@inertiajs/vue3';
-    import ConfirmationModal from '@/Components/ConfirmationModal.vue';
-    import { ref, computed } from 'vue';
-    import StageModal from '@/Components/StageModal.vue';
-
+    import { ref, computed, watch } from 'vue';
 
     const props = defineProps({
         season: {
             type: Object,
             required: true
         },
+        teamsCount: {
+            type: Number,
+            default: 0
+        },
+        existingRounds: {
+            type: Array,
+            default: () => []
+        },
         status: {
             type: String,
             default: null
-        },
-        teamsCount: {
-            type: Number,
-            default: 0  // <-- ДОБАВЬТЕ
-        },
+        }
     });
 
-    const showDeleteConfirmation = ref(false);
-    const showStageModal = ref(false);
-    const editingStage = ref(null);
-    const isEditMode = ref(false);
+    // Состояние для локального расписания
+    const rounds = ref([]);
+    const newGame = ref({
+        home_team_id: '',
+        away_team_id: '',
+        start_time: '',
+        venue: '',
+        home_score: null,
+        away_score: null
+    });
+    const isEditing = ref(false);
 
-    // Статусы сезонов
-    const statusLabels = {
+    // Статусы сезона
+    const seasonStatusLabels = {
         upcoming: 'Предстоящий',
         active: 'Активный',
         completed: 'Завершен'
     };
 
-    const statusClasses = {
+    const seasonStatusClasses = {
         upcoming: 'bg-yellow-100 text-yellow-800',
         active: 'bg-green-100 text-green-800',
         completed: 'bg-gray-100 text-gray-800'
     };
 
-    // Типы турниров
-    const tournamentTypeLabels = {
-        individual: 'Индивидуальный',
-        team: 'Командный',
-        mixed: 'Смешанный'
+    // Статусы игр
+    const gameStatusLabels = {
+        scheduled: 'Запланирована',
+        in_progress: 'В процессе',
+        completed: 'Завершена',
+        postponed: 'Перенесена',
+        cancelled: 'Отменена'
     };
 
-    // Статусы турниров
-    const tournamentStatusLabels = {
-        active: 'Активный',
-        inactive: 'Неактивный',
-        completed: 'Завершен'
+    const gameStatusClasses = {
+        scheduled: 'bg-blue-100 text-blue-800',
+        in_progress: 'bg-yellow-100 text-yellow-800',
+        completed: 'bg-green-100 text-green-800',
+        postponed: 'bg-orange-100 text-orange-800',
+        cancelled: 'bg-red-100 text-red-800'
     };
 
-    const tournamentStatusClasses = {
-        active: 'bg-green-100 text-green-800',
-        inactive: 'bg-gray-100 text-gray-800',
-        completed: 'bg-blue-100 text-blue-800'
-    };
-
-    // Длительность сезона в днях
-    const durationDays = computed(() => {
-        if (!props.season.start_date || !props.season.end_date) return 0;
-        const start = new Date(props.season.start_date);
-        const end = new Date(props.season.end_date);
-        const diffTime = Math.abs(end - start);
-        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    // Текст кнопки создания тура
+    const createRoundButtonText = computed(() => {
+        const count = rounds.value.length;
+        return count === 0 ? 'Создать 1 тур' : `Создать ${count + 1} тур`;
     });
 
+    // Получить имя команды по ID
+    const getTeamName = (teamId) => {
+        const team = props.season.teams?.find(t => t.id === teamId);
+        return team?.name || 'Неизвестная команда';
+    };
+
+    // Форматирование даты
     const formatDate = (dateString) => {
         if (!dateString) return '';
         return new Date(dateString).toLocaleDateString('ru-RU', {
@@ -340,85 +441,133 @@
 
     const formatDateTime = (dateString) => {
         if (!dateString) return '';
-        return new Date(dateString).toLocaleDateString('ru-RU', {
+        const date = new Date(dateString);
+        return date.toLocaleString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
             year: 'numeric',
-            month: 'long',
-            day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
         });
     };
 
-    const confirmDelete = () => {
-        showDeleteConfirmation.value = true;
+    // Редактирование
+    const startEditing = () => {
+        // Копируем существующее расписание для редактирования
+        rounds.value = props.existingRounds.map(round => ({
+            id: round.id,
+            name: round.name,
+            games: round.games.map(game => ({
+                id: game.id,
+                home_team_id: game.home_team_id,
+                away_team_id: game.away_team_id,
+                start_time: game.start_time,
+                venue: game.venue,
+                home_score: game.home_score,
+                away_score: game.away_score,
+                status: game.status || 'scheduled'
+            }))
+        }));
+        isEditing.value = true;
     };
 
-    const deleteSeason = () => {
-        router.delete(route('seasons.destroy', props.season.id), {
-            onSuccess: () => {
-                showDeleteConfirmation.value = false;
-            }
+    const cancelEditing = () => {
+        rounds.value = [];
+        isEditing.value = false;
+    };
+
+    // Добавить новый тур
+    const addNewRound = () => {
+        const roundNumber = rounds.value.length + 1;
+        rounds.value.push({
+            name: `${roundNumber} тур`,
+            games: []
         });
+        // Очищаем форму
+        newGame.value = {
+            home_team_id: '',
+            away_team_id: '',
+            start_time: '',
+            venue: '',
+            home_score: null,
+            away_score: null
+        };
     };
 
-    const closeDeleteConfirmation = () => {
-        showDeleteConfirmation.value = false;
-    };
-    const typeLabels = {
-        championship: 'Чемпионат',
-        group: 'Групповой этап',
-        playoff: 'Плей-офф'
-    };
-
-    const typeClasses = {
-        championship: 'bg-blue-100 text-blue-800',
-        group: 'bg-green-100 text-green-800',
-        playoff: 'bg-purple-100 text-purple-800'
-    };
-
-    const openCreateStageModal = () => {
-        editingStage.value = null;
-        isEditMode.value = false;
-        showStageModal.value = true;
-    };
-
-    const openEditStageModal = (stage) => {
-        editingStage.value = stage;
-        isEditMode.value = true;
-        showStageModal.value = true;
-    };
-    const handleStageSave = (data) => {
-        const url = isEditMode.value
-            ? route('stages.update', editingStage.value.id)
-            : route('stages.store');
-
-        const method = isEditMode.value ? 'put' : 'post';
-
-        router[method](url, data, {
-            onSuccess: () => {
-                showStageModal.value = false;
-                router.reload();
-            }
-        });
-    };
-
-    const closeStageModal = () => {
-        showStageModal.value = false;
-        editingStage.value = null;
-        isEditMode.value = false;
-    };
-
-    const confirmDeleteStage = (stage) => {
-        if (confirm(`Удалить этап "${stage.name}"?`)) {
-            router.delete(route('stages.destroy', stage.id), {
-                onSuccess: () => router.reload()
-            });
+    // Добавить матч в последний тур
+    const addGameToRound = () => {
+        if (rounds.value.length === 0) return;
+        if (!newGame.value.home_team_id || !newGame.value.away_team_id) {
+            alert('Выберите обе команды');
+            return;
         }
+
+        const lastRound = rounds.value[rounds.value.length - 1];
+        lastRound.games.push({
+            home_team_id: newGame.value.home_team_id,
+            away_team_id: newGame.value.away_team_id,
+            start_time: newGame.value.start_time,
+            venue: newGame.value.venue,
+            home_score: newGame.value.home_score,
+            away_score: newGame.value.away_score,
+            status: 'scheduled'
+        });
+
+        // Очищаем форму
+        newGame.value.home_team_id = '';
+        newGame.value.away_team_id = '';
+        newGame.value.home_score = null;
+        newGame.value.away_score = null;
+    };
+
+    // Удалить матч из тура
+    const removeGameFromRound = (roundIndex, gameIndex) => {
+        rounds.value[roundIndex].games.splice(gameIndex, 1);
+    };
+
+
+    // Сохранить расписание
+    const saveSchedule = () => {
+        if (rounds.value.length === 0) {
+            alert('Нет туров для сохранения');
+            return;
+        }
+
+        // Проверяем, что в каждом туре есть матчи
+        const emptyRounds = rounds.value.filter(r => r.games.length === 0);
+        if (emptyRounds.length > 0) {
+            alert(`В турах ${emptyRounds.map(r => r.name).join(', ')} нет матчей. Добавьте матчи или удалите пустые туры.`);
+            return;
+        }
+
+        if (!confirm('Сохранить расписание?')) return;
+
+        // Подготавливаем данные для отправки
+        const data = {
+            season_id: props.season.id,
+            rounds: rounds.value.map(round => ({
+                name: round.name,
+                games: round.games.map(game => ({
+                    home_team_id: game.home_team_id,
+                    away_team_id: game.away_team_id,
+                    start_time: game.start_time || null,
+                    venue: game.venue || null,
+                    home_score: game.home_score !== null ? parseInt(game.home_score) : null,
+                    away_score: game.away_score !== null ? parseInt(game.away_score) : null,
+                    status: 'scheduled'
+                }))
+            }))
+        };
+
+        router.post(route('seasons.schedule.store'), data, {
+            onSuccess: () => {
+                rounds.value = [];
+                isEditing.value = false;
+                router.reload();
+            },
+            onError: (errors) => {
+                alert('Ошибка при сохранении: ' + JSON.stringify(errors));
+            }
+        });
     };
 </script>
-
-<style scoped>
-    .prose {
-        line-height: 1.8;
-    }
-</style>

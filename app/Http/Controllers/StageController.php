@@ -51,6 +51,21 @@ class StageController extends Controller
             ->with('status', 'Этап "' . $name . '" успешно создан');
     }
 
+    public function show(Stage $stage)
+    {
+        $stage->load([
+            'season.teams',
+            'rounds.games.homeTeam',
+            'rounds.games.awayTeam',
+        ]);
+
+        return Inertia::render('Stages/Show', [
+            'stage' => $stage,
+            'roundsCount' => $stage->rounds()->count(),
+            'status' => session('status'),
+        ]);
+    }
+
     public function update(Request $request, Stage $stage)
         {
             $validated = $request->validate([
