@@ -118,6 +118,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/seasons/teams', [SeasonTeamController::class, 'store'])->name('seasons.teams.store');
     Route::delete('/seasons/{season}/teams/{team}', [SeasonTeamController::class, 'destroy'])->name('seasons.teams.destroy');
     Route::post('/seasons/teams/multiple', [SeasonTeamController::class, 'storeMultiple'])->name('seasons.teams.store.multiple');
+    Route::post('/seasons/rounds', [RoundController::class, 'storeWithGames'])->name('seasons.rounds.store');
 
     Route::get('/stages/{stage}', [StageController::class, 'show'])->name('stages.show');
 

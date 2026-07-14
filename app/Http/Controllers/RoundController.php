@@ -6,6 +6,7 @@ use App\Models\Round;
 use App\Models\Stage;
 use App\Models\Team;
 use App\Models\Game;
+use App\Models\TournamentSeason;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -216,10 +217,14 @@ class RoundController extends Controller
      */
     public function destroy(Round $round)
     {
-        $stageId = $round->stage_id;
+        // Проверяем, есть ли в туре матчи
+        if ($round->games()->count() > 0) {
+            return redirect()
+                ->back()
+                ->with('error', 'Невозможно удалить тур, в котором уже есть матчи. Сначала удалите все матчи.');
+        }
 
-        // Удаляем все игры тура
-        $round->games()->delete();
+        $stageId = $round->stage_id;
         $round->delete();
 
         return redirect()
@@ -266,5 +271,107 @@ class RoundController extends Controller
         return redirect()
             ->route('stages.show', $round->stage_id)
             ->with('status', 'Игра успешно добавлена');
+    }
+
+    /**
+     * Создание тура из страницы сезона
+     */
+    public function storeFromSeason(Request $request)
+    {
+        $validated = $request->validate([
+            'season_id' => 'required|exists:tournament_seasons,id',
+            'name' => 'required|string|max:255',
+        ]);
+
+        $season = TournamentSeason::find($validated['season_id']);
+
+        // Находим или создаем этап "Чемпионат"
+        $stage = $season->stages()->firstOrCreate(
+            ['type' => 'championship'],
+            [
+                'name' => 'Чемпионат',
+                'type' => 'championship',
+                'order' => 0,
+                'status' => 'upcoming',
+            ]
+        );
+
+        // Создаем тур
+        $maxOrder = Round::where('stage_id', $stage->id)->max('order') ?? -1;
+
+        $round = Round::create([
+            'stage_id' => $stage->id,
+            'name' => $validated['name'],
+            'order' => $maxOrder + 1,
+            'type' => 'group',
+            'status' => 'upcoming',
+        ]);
+
+        return redirect()
+            ->route('seasons.show', $validated['season_id'])
+            ->with('status', 'Тур "' . $round->name . '" успешно создан');
+    }
+
+    /**
+     * Создание тура с матчами
+     */
+    public function storeWithGames(Request $request)
+    {
+        $validated = $request->validate([
+            'season_id' => 'required|exists:tournament_seasons,id',
+            'name' => 'required|string|max:255',
+            'games' => 'required|array|min:1',
+            'games.*.home_team_id' => 'required|exists:teams,id|different:games.*.away_team_id',
+            'games.*.away_team_id' => 'required|exists:teams,id|different:games.*.home_team_id',
+            'games.*.start_time' => 'nullable|date',
+            'games.*.venue' => 'nullable|string|max:255',
+            'games.*.home_score' => 'nullable|integer|min:0',
+            'games.*.away_score' => 'nullable|integer|min:0',
+        ]);
+
+        $season = TournamentSeason::with('tournament')->find($validated['season_id']);
+
+        // Находим или создаем этап "Чемпионат"
+        $stage = $season->stages()->firstOrCreate(
+            ['type' => 'championship'],
+            [
+                'name' => 'Чемпионат',
+                'type' => 'championship',
+                'order' => 0,
+                'status' => 'upcoming',
+            ]
+        );
+
+        // Создаем тур
+        $maxOrder = Round::where('stage_id', $stage->id)->max('order') ?? -1;
+
+        $round = Round::create([
+            'stage_id' => $stage->id,
+            'name' => $validated['name'],
+            'order' => $maxOrder + 1,
+            'type' => 'group',
+            'status' => 'upcoming',
+        ]);
+
+        // Создаем матчи
+        foreach ($validated['games'] as $gameData) {
+            $round->games()->create([
+                'tournament_id' => $season->tournament_id,
+                'season_id' => $season->id,
+                'stage_id' => $stage->id,
+                'round_id' => $round->id,
+                'home_team_id' => $gameData['home_team_id'],
+                'away_team_id' => $gameData['away_team_id'],
+                'start_time' => $gameData['start_time'],
+                'venue' => $gameData['venue'],
+                'home_score' => $gameData['home_score'],
+                'away_score' => $gameData['away_score'],
+                'status' => 'scheduled',
+            ]);
+        }
+
+        return redirect()
+            ->route('seasons.show', $validated['season_id'])
+            ->with('status', 'Тур "' . $round->name . '" успешно создан с ' . count($validated['games']) . ' матчами');
     }
 }
