@@ -41,69 +41,106 @@ class TournamentSeasonController extends Controller
     /**
      * Создание сезона (через модальное окно)
      */
-        public function store(Request $request)
-        {
-            $validated = $request->validate([
-                'tournament_id' => 'required|exists:tournaments,id',
-                'description' => 'nullable|string',
-                'start_date' => 'required|date',
-                'end_date' => 'required|date|after_or_equal:start_date',
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'tournament_id' => 'required|exists:tournaments,id',
+            'description' => 'nullable|string',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        // Проверка на длительность более 1 года
+        $start = Carbon::parse($validated['start_date']);
+        $end = Carbon::parse($validated['end_date']);
+
+        if ($start->diffInDays($end) > 366) {
+            return back()->withErrors([
+                'end_date' => 'Сезон не может длиться более одного года'
             ]);
-
-            // Проверка на длительность более 1 года
-            $start = Carbon::parse($validated['start_date']);
-            $end = Carbon::parse($validated['end_date']);
-
-            if ($start->diffInDays($end) > 366) {
-                return back()->withErrors([
-                    'end_date' => 'Сезон не может длиться более одного года'
-                ]);
-            }
-
-            // Генерация названия
-            $name = TournamentSeason::generateName(
-                $validated['start_date'],
-                $validated['end_date']
-            );
-
-            // Определение статуса
-            $now = Carbon::now();
-            $status = 'upcoming';
-            if ($now->between($start, $end)) {
-                $status = 'active';
-            } elseif ($now->gt($end)) {
-                $status = 'completed';
-            }
-
-            $season = TournamentSeason::create([
-                'tournament_id' => $validated['tournament_id'],
-                'name' => $name,
-                'description' => $validated['description'],
-                'start_date' => $validated['start_date'],
-                'end_date' => $validated['end_date'],
-                'status' => $status,
-                'year' => $start->year,
-                'is_current' => $status === 'active', // устанавливаем is_current на основе статуса
-            ]);
-
-            return redirect()
-                ->route('tournaments.show', $validated['tournament_id'])
-                ->with('status', 'Сезон успешно создан');
         }
+
+        // Генерация названия
+        $name = TournamentSeason::generateName(
+            $validated['start_date'],
+            $validated['end_date']
+        );
+
+        // Определение статуса
+        $now = Carbon::now();
+        $status = 'upcoming';
+        if ($now->between($start, $end)) {
+            $status = 'active';
+        } elseif ($now->gt($end)) {
+            $status = 'completed';
+        }
+
+        $season = TournamentSeason::create([
+            'tournament_id' => $validated['tournament_id'],
+            'name' => $name,
+            'description' => $validated['description'],
+            'start_date' => $validated['start_date'],
+            'end_date' => $validated['end_date'],
+            'status' => $status,
+            'year' => $start->year,
+            'is_current' => $status === 'active', // устанавливаем is_current на основе статуса
+        ]);
+
+        return redirect()
+            ->route('tournaments.show', $validated['tournament_id'])
+            ->with('status', 'Сезон успешно создан');
+    }
 
     /**
      * Просмотр сезона
      */
-        public function show(TournamentSeason $season)
-        {
-            // Загружаем связи с турниром и федерацией
-            $season->load(['tournament.federation']);
+    public function show(TournamentSeason $season)
+    {
+    $season->load([
+        'tournament.federation',
+        'teams',
+        'stages.rounds.games.homeTeam',
+        'stages.rounds.games.awayTeam',
+    ]);
 
-            return Inertia::render('Seasons/Show', [
-                'season' => $season,
-                'status' => session('status'),
-            ]);
-        }
+    // Получаем этап "Чемпионат" и его туры с играми
+    $championshipStage = $season->stages()->where('type', 'championship')->first();
+
+    $existingRounds = [];
+    if ($championshipStage) {
+        $existingRounds = $championshipStage->rounds()
+            ->with(['games.homeTeam', 'games.awayTeam'])
+            ->orderBy('order')
+            ->get()
+            ->map(function($round) {
+                return [
+                    'id' => $round->id,
+                    'name' => $round->name,
+                    'games' => $round->games->map(function($game) {
+                        return [
+                            'id' => $game->id,
+                            'home_team_id' => $game->home_team_id,
+                            'away_team_id' => $game->away_team_id,
+                            'home_team' => $game->homeTeam ? ['name' => $game->homeTeam->name] : null,
+                            'away_team' => $game->awayTeam ? ['name' => $game->awayTeam->name] : null,
+                            'start_time' => $game->start_time,
+                            'venue' => $game->venue,
+                            'home_score' => $game->home_score,
+                            'away_score' => $game->away_score,
+                            'status' => $game->status,
+                        ];
+                    })
+                ];
+            });
+    }
+
+    return Inertia::render('Seasons/Show', [
+        'season' => $season,
+        'teamsCount' => $season->teams()->count(),
+        'existingRounds' => $existingRounds,
+        'status' => session('status'),
+    ]);
+}
 
     /**
      * Редактирование сезона

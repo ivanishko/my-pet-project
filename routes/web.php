@@ -5,6 +5,12 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\FederationController;
 use App\Http\Controllers\TournamentController;
 use App\Http\Controllers\TournamentSeasonController;
+use App\Http\Controllers\TeamController;
+use App\Http\Controllers\StageController;
+use App\Http\Controllers\SeasonTeamController;
+use App\Http\Controllers\RoundController;
+use App\Http\Controllers\GameController;
+use App\Http\Controllers\ScheduleController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use App\Models\Post;
@@ -49,6 +55,14 @@ Route::get('/seasons', [TournamentSeasonController::class, 'index'])->name('seas
 Route::get('/seasons/all', [TournamentSeasonController::class, 'all'])->name('seasons.all'); // Все сезоны
 Route::get('/seasons/{season}', [TournamentSeasonController::class, 'show'])->name('seasons.show');
 
+// ===== КОМАНДЫ (публичный просмотр) =====
+Route::get('/teams', [TeamController::class, 'index'])->name('teams.index');
+Route::get('/teams/{team}', [TeamController::class, 'show'])->name('teams.show');
+Route::get('/federations/{federation}/teams', [TeamController::class, 'indexByFederation'])->name('federations.teams.index');
+
+
+
+
 
 // ============ ЗАЩИЩЕННЫЕ МАРШРУТЫ (только для авторизованных) ============
 
@@ -87,6 +101,40 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/seasons/{season}/edit', [TournamentSeasonController::class, 'edit'])->name('seasons.edit');
     Route::put('/seasons/{season}', [TournamentSeasonController::class, 'update'])->name('seasons.update');
     Route::delete('/seasons/{season}', [TournamentSeasonController::class, 'destroy'])->name('seasons.destroy');
+
+    // ===== УПРАВЛЕНИЕ КОМАНДАМИ =====
+    Route::post('/teams', [TeamController::class, 'store'])->name('teams.store');
+    Route::get('/teams/{team}/edit', [TeamController::class, 'edit'])->name('teams.edit');
+    Route::put('/teams/{team}', [TeamController::class, 'update'])->name('teams.update');
+    Route::delete('/teams/{team}', [TeamController::class, 'destroy'])->name('teams.destroy');
+
+    // ===== УПРАВЛЕНИЕ этапами сезонов ====
+    Route::post('/stages', [StageController::class, 'store'])->name('stages.store');
+    Route::put('/stages/{stage}', [StageController::class, 'update'])->name('stages.update');
+    Route::delete('/stages/{stage}', [StageController::class, 'destroy'])->name('stages.destroy');
+
+    // Управление командами в сезоне
+    Route::get('/seasons/{season}/teams', [SeasonTeamController::class, 'index'])->name('seasons.teams.index');
+    Route::post('/seasons/teams', [SeasonTeamController::class, 'store'])->name('seasons.teams.store');
+    Route::delete('/seasons/{season}/teams/{team}', [SeasonTeamController::class, 'destroy'])->name('seasons.teams.destroy');
+    Route::post('/seasons/teams/multiple', [SeasonTeamController::class, 'storeMultiple'])->name('seasons.teams.store.multiple');
+    Route::post('/seasons/rounds', [RoundController::class, 'storeWithGames'])->name('seasons.rounds.store');
+
+    Route::get('/stages/{stage}', [StageController::class, 'show'])->name('stages.show');
+
+    // ===== УПРАВЛЕНИЕ ТУРАМИ =====
+    Route::get('/stages/{stage}/rounds', [RoundController::class, 'index'])->name('stages.rounds.index');
+    Route::post('/rounds', [RoundController::class, 'store'])->name('rounds.store');
+    Route::post('/rounds/{round}/games', [RoundController::class, 'addGame'])->name('rounds.games.store');
+    Route::put('/rounds/{round}', [RoundController::class, 'update'])->name('rounds.update');
+    Route::delete('/rounds/{round}', [RoundController::class, 'destroy'])->name('rounds.destroy');
+
+    // ===== УПРАВЛЕНИЕ ИГРАМИ =====
+    Route::put('/games/{game}', [GameController::class, 'update'])->name('games.update');
+    Route::put('/rounds/{round}/games', [GameController::class, 'updateMultiple'])->name('rounds.games.update');
+
+
+    Route::post('/seasons/schedule', [ScheduleController::class, 'store'])->name('seasons.schedule.store');
 });
 
 // ============ ДАШБОРД (только для авторизованных и верифицированных) ============

@@ -56,6 +56,10 @@
                                          :active="route().current('federations.index')">
                                     Федерации
                                 </NavLink>
+                                <NavLink :href="route('teams.index')"
+                                         :active="route().current('teams.index')">
+                                    Команды
+                                </NavLink>
                                 <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
                                     Дашбоард
                                 </NavLink>
