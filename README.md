@@ -63,7 +63,7 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 
 ## Power up
 
-- mysql.start (Macos);  mysql -u root -p (Windows)
+- mysql.start OR  mysql -u root -p
 - php artisan serve 
 - npm run dev
 
